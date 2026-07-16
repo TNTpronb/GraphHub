@@ -1,0 +1,55 @@
+:root {
+    /* ── 四个主色 ── */
+    --color-bg:       #FAFAFA;   /* 页面背景，大面积使用 */
+    --color-text:     #2C2C2C;   /* 正文文字，替代纯黑 */
+    --color-border:   #CECECE;   /* 默认边框 / 分割线 */
+    --color-primary:  #956BF5;   /* 主题色，仅按钮/链接/选中态 */
+
+    /* ── 背景衍生色 ── */
+    --color-bg-white:    #FFFFFF;   /* 卡片、面板、弹窗的白色背景 */
+    --color-bg-hover:    #F0F0F0;   /* 列表项 / 菜单项 hover 时的浅灰底 */
+    --color-bg-selected: #F4F0FF;   /* 选中态淡紫色背景 */
+
+    /* ── 文字衍生色 ── */
+    --color-text-secondary: #6B6B6B;  /* 次要文字：时间、计数、描述 */
+    --color-text-tertiary:  #999999;  /* 辅助文字：placeholder、禁用态 */
+
+    /* ── 主色衍生色 ── */
+    --color-primary-hover:  #7B52E0;  /* 主色按钮 hover 时加深 */
+    --color-primary-active: #6A3FCC;  /* 主色按钮按下时再加深 */
+    --color-primary-light:  #F4F0FF;  /* 主色浅底（同 bg-selected） */
+
+    /* ── 语义色（不随主题变化） ── */
+    --color-danger:  #BA2E38;   /* 错误、删除、打回 */
+    --color-success: #448544;   /* 成功、通过、已掌握 */
+    --color-warning: #D4A72C;   /* 警告、部分掌握 */
+
+    /* ── 字体族 ── */
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI',
+                'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue',
+                Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, 'Cascadia Code', 'Source Code Pro',
+                Menlo, Consolas, 'Liberation Mono', monospace;
+
+    /* ── 字号体系（参考 GitHub 的 6 级字号） ── */
+    --text-xs:   12px;  /* 时间戳、Badge 计数、辅助说明 */
+    --text-sm:   14px;  /* 正文主体、Diff 内容、卡片描述 */
+    --text-base: 16px;  /* 导航、按钮、列表项标题 */
+    --text-lg:   20px;  /* 区块小标题 */
+    --text-xl:   24px;  /* 页面标题 */
+    --text-2xl:  32px;  /* 登录页大标题、欢迎语 */
+
+    /* ── 间距体系（8px 基准，乘以倍数） ── */
+    --space-1: 4px;    /* 图标与文字间距 */
+    --space-2: 8px;    /* 表单行间距 */
+    --space-3: 12px;   /* 区块内小间距 */
+    --space-4: 16px;   /* 卡片 padding、列表项间距 */
+    --space-5: 24px;   /* 页面 content padding */
+    --space-6: 32px;   /* 大区块间距 */
+    --space-7: 48px;   /* 页面顶部留白 */
+
+    /* ── 圆角体系（三档） ── */
+    --radius-sm: 4px;  /* 小标签、Badge */
+    --radius-md: 6px;  /* 按钮、输入框、卡片 */
+    --radius-lg: 8px;  /* 大容器、Modal */
+}

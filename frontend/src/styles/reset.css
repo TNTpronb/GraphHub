@@ -1,0 +1,51 @@
+/* ================================================================
+   浏览器默认样式重置
+   ================================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/*基础页面样式*/
+html,body{
+    height: 100%;
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);     /* 默认 14px */
+    color: var(--color-text);
+    background-color: var(--color-bg);
+    line-height: 1.5;              /* 行高 1.5 倍字号，阅读舒适 */
+    -webkit-font-smoothing: antialiased;   /* macOS 下字体更清晰 */
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* 根容器满窗口 */
+#root {
+    height: 100%;
+}
+
+/* 去掉列表默认样式 */
+ul, ol {
+    list-style: none;
+}
+
+/* 去掉链接默认样式 */
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* 图片不超出容器 */
+img {
+    max-width: 100%;
+    display: block;
+}
+
+/*输入框字体继承*/
+input, textarea, select {
+    font: inherit;
+    color: inherit;
+}
