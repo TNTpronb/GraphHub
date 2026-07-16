@@ -3,14 +3,13 @@
 // 目前先只有主题包裹，路由在下一步配置
 
 import ThemeProvider from './theme/ThemeProvider'
+import { RouterProvider } from 'react-router-dom'
+import router from './router'
 
 function App() {
   return (
     <ThemeProvider>
-      <div style={{ padding: 24 }}>
-        <h1>KG-Class 骨架已就绪</h1>
-        <p>如果能看到这行字，说明主题配置成功。</p>
-      </div>
+      <RouterProvider router={router} />
     </ThemeProvider>
   )
 }
