@@ -25,11 +25,18 @@ erDiagram
     User ||--o{ ReviewRecord : "审核操作"
     User ||--o{ Contribution : "获得"
     User ||--o{ WrongAnswer : "产生"
+    User ||--o{ CourseEnrollment : "注册课程"
+    User ||--o{ EnrollmentRequest : "提交申请"
+    User ||--o{ InviteCode : "创建邀请码"
 
     Class ||--o{ Course : "开设"
+    Class ||--o{ User : "所属（可选）"
     Course ||--|| KnowledgeGraph : "拥有主图谱"
     Course ||--o{ CourseMaterial : "包含"
     Course ||--o{ Exercise : "包含"
+    Course ||--o{ CourseEnrollment : "被注册"
+    Course ||--o{ EnrollmentRequest : "收到申请"
+    Course ||--o{ InviteCode : "生成邀请码"
 
     KnowledgeGraph ||--o{ VersionSnapshot : "版本记录"
     KnowledgeGraph ||--o{ PrivateGraph : "被 Fork"
@@ -59,7 +66,7 @@ erDiagram
 | username | VARCHAR(64) UNIQUE | 学号/工号 |
 | display_name | VARCHAR(128) | 显示名称 |
 | role | ENUM(admin, teacher, group_leader, student) | 角色 |
-| class_id | FK → Class | 所属班级 |
+| class_id | FK → Class NULLABLE | 主归属班级（可为空，学生可通过邀请码或申请加入跨班课程） |
 | password_hash | VARCHAR(256) | |
 | avatar_url | VARCHAR(512) | |
 | created_at | DATETIME | |
@@ -81,6 +88,43 @@ erDiagram
 | semester | VARCHAR(64) | 如"2025-2026-1" |
 | class_id | FK → Class | **当前 1:1，Schema 已预留 1:N** |
 | created_at | DATETIME | |
+
+#### CourseEnrollment（课程注册 — 学生 ↔ 课程多对多桥接表）
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | UUID PK | |
+| user_id | FK → User | 学生 |
+| course_id | FK → Course | 课程 |
+| enrolled_by | ENUM(invite_code, teacher_approval, class_auto) | 加入方式 |
+| enrolled_at | DATETIME | |
+| **UNIQUE** | (user_id, course_id) | 同一学生不能重复注册同一课程 |
+
+#### InviteCode（邀请码）
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | UUID PK | |
+| course_id | FK → Course | 所属课程 |
+| code | VARCHAR(8) UNIQUE | 6-8 位字母数字混合 |
+| max_uses | INT NULLABLE | NULL = 无限使用 |
+| used_count | INT DEFAULT 0 | 已使用次数 |
+| expires_at | DATETIME NULLABLE | NULL = 永不过期 |
+| is_active | BOOLEAN DEFAULT true | 教师可手动停用 |
+| created_by | FK → User | 创建该码的教师 |
+| created_at | DATETIME | |
+
+#### EnrollmentRequest（加入申请）
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | UUID PK | |
+| student_id | FK → User | 申请人 |
+| course_id | FK → Course | 申请加入的课程 |
+| message | TEXT NULLABLE | 申请留言（可选：为什么想加入） |
+| status | ENUM(pending, approved, rejected) | |
+| reviewed_by | FK → User NULLABLE | 审批教师 |
+| review_comment | TEXT NULLABLE | 审批意见 |
+| created_at | DATETIME | |
+| updated_at | DATETIME | |
+| **UNIQUE** | (student_id, course_id) | 同一学生对同一课程不能重复申请 |
 
 #### KnowledgeGraph（知识图谱元信息）
 | 字段 | 类型 | 说明 |
@@ -407,20 +451,24 @@ graph LR
                     ┌──────────────┐
                     │    Class     │
                     │    (班级)     │
-                    └──────┬───────┘
-                           │ 1:N
-                           ▼
-                    ┌──────────────┐       ┌──────────────────┐
-                    │   Course     │───────│ KnowledgeGraph   │
-                    │   (课程)      │ 1:1  │  (知识图谱元信息)  │
-                    └──────┬───────┘       └────────┬─────────┘
-                           │                        │
-              ┌────────────┼────────────┐           │ 1:N
-              ▼            ▼            ▼           ▼
-       ┌────────────┐ ┌──────────┐ ┌──────────┐ ┌─────────────────┐
-       │CourseMaterial│ │ Exercise │ │   User   │ │ VersionSnapshot │
-       │  (非md资料)  │ │  (习题)  │ │  (用户)   │ │   (版本快照)     │
-       └──────┬─────┘ └────┬─────┘ └────┬─────┘ └─────────────────┘
+                    └──┬───────┬───┘
+                       │ 1:N   │ 1:N (可选)
+                       ▼       ▼
+              ┌──────────────┐  ┌──────────┐
+              │   Course     │  │   User   │
+              │   (课程)      │  │  (用户)   │
+              └──┬───────┬───┘  └────┬─────┘
+                 │       │           │
+    ┌────────────┼──┐    │     ┌─────┼──────┐
+    ▼            ▼  ▼    │     ▼     ▼      ▼
+┌────────┐ ┌────────────┐│ ┌─────────┐ ┌──────────────┐
+│Knowledge│ │CourseEnroll││ │InviteCode│ │EnrollmentReq │
+│ Graph  │ │  (注册)     ││ │(邀请码)  │ │  (加入申请)   │
+└───┬────┘ └────────────┘│ └─────────┘ └──────────────┘
+    │                     │
+    │ 1:N                 │ Fork/PR/审核/贡献
+    ▼                     ▼
+(后续与原图一致...)
               │             │            │
     挂载      │             │ 挂载       │ Fork/PR/审核/贡献
               ▼             ▼            │
@@ -472,6 +520,13 @@ graph LR
 |------|--------|----------|------|------|
 | 班级开设课程 | Class | Course | 1:N | 当前 1:1，预留扩展 |
 | 课程拥有主图谱 | Course | KnowledgeGraph | 1:1 | |
+| 学生注册课程 | User | CourseEnrollment | 1:N | 多对多桥接 |
+| 课程被注册 | Course | CourseEnrollment | 1:N | |
+| 教师创建邀请码 | User | InviteCode | 1:N | |
+| 课程生成邀请码 | Course | InviteCode | 1:N | |
+| 学生提交加入申请 | User | EnrollmentRequest | 1:N | |
+| 课程收到加入申请 | Course | EnrollmentRequest | 1:N | |
+| 教师审批申请 | User | EnrollmentRequest | 1:N | reviewed_by |
 | 用户 Fork 图谱 | User | PrivateGraph | 1:N | |
 | 取自源图谱 | PrivateGraph | KnowledgeGraph | N:1 | Fork 溯源 |
 | 用户提交 PR | User | PullRequest | 1:N | |
@@ -513,8 +568,11 @@ graph LR
 | 12 | `contributions` | 必须 | 基础积分 |
 | 13 | `material_note_mappings` | 必须 | 跨库挂载 |
 | 14 | `exercise_note_mappings` | 必须 | 跨库挂载 |
-| 15 | `badges` | V2.0 | 徽章体系 |
-| 16 | `user_badges` | V2.0 | 徽章关联 |
+| 15 | `course_enrollments` | 必须 | 学生注册课程（多对多桥接） |
+| 16 | `invite_codes` | 必须 | 课程邀请码 |
+| 17 | `enrollment_requests` | 必须 | 学生加入申请审批 |
+| 18 | `badges` | V2.0 | 徽章体系 |
+| 19 | `user_badges` | V2.0 | 徽章关联 |
 
 **Neo4j 侧（V1.0 全部需要）**
 

@@ -16,17 +16,18 @@
     /materials                      # 课程资料管理
     /exercises                      # 习题库管理
     /analytics                      # 学情分析看板
+    /enrollments                    # ★ 学生管理（审批加入申请 + 邀请码管理）
   /review                           # 审核工作台（全局，聚合所有课程PR）
   /settings                         # 个人设置
 
 /student                            # 学生端壳
   /dashboard                        # 学生首页
+  /courses/browse                   # ★ 课程广场（浏览 + 申请加入）
   /courses/:courseId                # 课程上下文壳
     /graph                          # 图谱浏览（学习模式，双视图）
     /exercises                      # 练习
   /private-graph/:graphId           # 私人图谱编辑
   /pr/:prId                         # PR 详情 / 新建 PR
-  /wrong-answers                    # 错题本
   /contributions                    # 个人贡献
   /settings                         # 个人设置
 ```
@@ -44,15 +45,16 @@
 | `/teacher/courses/:courseId/materials` | 课程资料 | PPT/PDF 等非 md 资料上传、分类、挂载到 Note |
 | `/teacher/courses/:courseId/exercises` | 习题库 | 习题增删改、批量导入、挂载到 Note |
 | `/teacher/courses/:courseId/analytics` | 学情看板 | 全班掌握热力图、薄弱点预警、学生进度列表 |
+| `/teacher/courses/:courseId/enrollments` | 学生管理 | ★ 审批加入申请（通过/拒绝）+ 邀请码生成与管理（创建/复制/停用/查看使用情况） |
 | `/teacher/review` | 审核工作台 | ★ 全类型 PR 聚合列表；每条 PR 附 AI 预审评分与风险标记；批量操作；点击进入详情查看 AI 审核报告全文 |
 | `/teacher/settings` | 个人设置 | 密码修改、审核流程配置等 |
 | **学生端** | | |
-| `/student/dashboard` | 学生首页 | 我的课程、图谱学习进度、待处理 PR、近期贡献 |
+| `/student/dashboard` | 学生首页 | 我的课程、图谱学习进度、待处理 PR、近期贡献。**顶部醒目位置：邀请码加入入口** |
+| `/student/courses/browse` | 课程广场 | ★ 浏览全校可加入的公开课程，支持搜索/按学科筛选，每门课展示简介+节点数+学生数，点击"申请加入"提交申请 |
 | `/student/courses/:courseId/graph` | 图谱浏览 | 网络图 + 树状列表双视图学习模式（只读 + 掌握度标注）。**页面内嵌 AI 辅导员面板** |
 | `/student/courses/:courseId/exercises` | 练习 | 按节点/难度筛选练习、答题、自动判分 |
 | `/student/private-graph/:graphId` | 私人图谱 | Fork 副本编辑，含 Markdown 编辑器、冲突检测、同步上游、提交 PR 入口 |
 | `/student/pr/:prId` | PR 详情 | ★ 查看 PR 状态、AI 审核结果与评分、人工审核意见、Diff 预览、冲突解决、修改重提；`prId=new` 时为新建 PR |
-| `/student/wrong-answers` | 错题本 | 错题列表、重做、查看归因诊断 |
 | `/student/contributions` | 我的贡献 | 贡献矩阵热力图、积分、徽章、贡献记录列表 |
 | `/student/settings` | 个人设置 | 密码修改等 |
 
@@ -116,6 +118,7 @@ AI 辅导员只在以下页面出现（公有图谱专属）：
   │   ├── <NavItem to="materials" />
   │   ├── <NavItem to="exercises" />
   │   ├── <NavItem to="analytics" />
+  │   ├── <NavItem to="enrollments" />             # ★ 学生管理（申请审批+邀请码）
   │   ├── <Divider />
   │   ├── <NavItem to="/teacher/dashboard" />
   │   ├── <NavItem to="/teacher/review" />        # badge: 全部待审总数
@@ -198,12 +201,36 @@ AI 辅导员只在以下页面出现（公有图谱专属）：
       │       │   │   └── <TagSelect />
       │       │   └── <NodeMountSelector />
       │       │
-      │       └── <AnalyticsPage>
-      │           ├── <AnalyticsHeader />
-      │           ├── <MasteryHeatmap />
-      │           │   └── <GraphCanvas />          # 复用，叠加热力图
-      │           ├── <WeakPointList />
-      │           ├── <StudentProgressTable />
+      │       ├── <AnalyticsPage>
+      │       │   ├── <AnalyticsHeader />
+      │       │   ├── <MasteryHeatmap />
+      │       │   │   └── <GraphCanvas />          # 复用，叠加热力图
+      │       │   ├── <WeakPointList />
+      │       │   ├── <StudentProgressTable />
+      │       │   └── <AlertPanel />
+      │       │
+      │       └── <EnrollmentsPage>               # ★ /teacher/courses/:courseId/enrollments
+      │           ├── <Tabs>
+      │           │   ├── <TabPane: 加入申请>
+      │           │   │   ├── <RequestFilter />
+      │           │   │   ├── <RequestList />
+      │           │   │   │   └── <RequestCard />
+      │           │   │   │       ├── 学生姓名、学号
+      │           │   │   │       ├── 申请留言
+      │           │   │   │       ├── 申请时间
+      │           │   │   │       └── <ApproveButton /> / <RejectButton />
+      │           │   │   └── <BatchApprove />
+      │           │   └── <TabPane: 邀请码>
+      │           │       ├── <CreateInviteCodeButton />
+      │           │       ├── <InviteCodeList />
+      │           │       │   └── <InviteCodeCard />
+      │           │       │       ├── 邀请码（大字，一键复制按钮）
+      │           │       │       ├── 已使用/最大使用次数
+      │           │       │       ├── 创建时间 / 过期时间
+      │           │       │       ├── <CopyButton />
+      │           │       │       └── <DeactivateButton />   # 停用
+      │           │       └── <InviteCodeStats />             # 总使用次数统计
+      │           └── <EnrolledStudentTable />                # 当前已注册学生列表
       │           └── <AlertPanel />
       │
       ├── <ReviewWorkbench>                        # ★ AI 审核在此
@@ -250,7 +277,7 @@ AI 辅导员只在以下页面出现（公有图谱专属）：
   │   ├── <NavItem to="exercises" />
   │   ├── <Divider />
   │   ├── <NavItem to="/student/dashboard" />
-  │   ├── <NavItem to="/student/wrong-answers" />
+  │   ├── <NavItem to="/student/courses/browse" />  # ★ 课程广场
   │   ├── <NavItem to="/student/contributions" />
   │   ├── <NavItem to="/student/settings" />
   │   ├── <Divider />
@@ -258,10 +285,27 @@ AI 辅导员只在以下页面出现（公有图谱专属）：
   └── <Outlet>
       │
       ├── <StudentDashboard>
+      │   ├── <InviteCodeJoinCard />              # ★ 醒目的邀请码输入区
       │   ├── <MyCourseCards />
       │   ├── <RecentPRList />
       │   ├── <ContributionSummary />
       │   └── <LearningStreak />
+      │
+      ├── <CourseBrowsePage>                      # ★ /student/courses/browse
+      │   ├── <SearchAndFilterBar />
+      │   │   ├── <SearchBox />
+      │   │   └── <SubjectFilter />
+      │   ├── <CourseGrid />
+      │   │   └── <CourseBrowseCard />
+      │   │       ├── 课程名、教师、班级
+      │   │       ├── 节点数、学生数
+      │   │       ├── 课程简介
+      │   │       ├── <ApplyButton />              # ★ 申请加入
+      │   │       └── <EnrollmentStatusBadge />    # 已申请/已加入/未加入
+      │   └── <ApplyDrawer />                      # 申请抽屉
+      │       ├── 课程名称显示
+      │       ├── <MessageInput />                 # 申请留言
+      │       └── <SubmitButton />
       │
       ├── <CourseContextLayout>
       │   └── <Outlet>

@@ -86,16 +86,17 @@ src/
 │   │   ├── materials/   #     资料管理
 │   │   ├── exercises/   #     习题库
 │   │   ├── analytics/   #     学情分析
+│   │   ├── enrollments/ #     学生管理（审批+邀请码）
 │   │   ├── review/      #     审核工作台
 │   │   ├── create-course/ #   新建课程向导
 │   │   └── settings/    #     设置
 │   └── student/         # 学生端
 │       ├── dashboard/   #     首页
+│       ├── courses-browse/ #  课程广场
 │       ├── graph/       #     图谱浏览
 │       ├── exercises/   #     练习
 │       ├── private-graph/ #   私人图谱
 │       ├── pr/          #     PR 详情
-│       ├── wrong-answers/ #  错题本
 │       ├── contributions/ #  贡献
 │       └── settings/    #     设置
 ├── router/              # 路由配置
@@ -753,9 +754,9 @@ export const teacherGlobalMenuItems: ItemType[] = [
 // 学生端菜单
 export const studentMenuItems: ItemType[] = [
   { key: 'dashboard', icon: <HomeOutlined />,       label: '首页' },
+  { key: 'browse',    icon: <SearchOutlined />,      label: '课程广场' },
   { key: 'graph',     icon: <ApartmentOutlined />,  label: '图谱浏览' },
   { key: 'exercises', icon: <ExperimentOutlined />, label: '练习' },
-  { key: 'wrong-answers', icon: <BookOutlined />,   label: '错题本' },
   { key: 'contributions', icon: <BarChartOutlined />, label: '我的贡献' },
   { key: 'settings',  icon: <SettingOutlined />,    label: '设置' },
 ]
@@ -1045,7 +1046,6 @@ const StudentLayout = () => {
     dashboard:     '/student/dashboard',
     graph:         `/student/courses/${pathParts[3] === 'courses' ? pathParts[4] : ''}/graph`,
     exercises:     `/student/courses/${pathParts[3] === 'courses' ? pathParts[4] : ''}/exercises`,
-    'wrong-answers': '/student/wrong-answers',
     contributions: '/student/contributions',
     settings:      '/student/settings',
   }
@@ -4658,69 +4658,9 @@ export default AnalyticsPage
 
 ---
 
-## 20. 错题本 + 贡献页 + 设置页（P15 + P16 + P9/P17）
+## 20. 贡献页 + 设置页（P15 + P16 + P9/P17）
 
-### 20. 错题本
-
-**`src/pages/student/wrong-answers/index.tsx`**
-
-```tsx
-import { useState } from 'react'
-import { Collapse, Tag, Button, Empty, Space } from 'antd'
-import { RedoOutlined, LinkOutlined } from '@ant-design/icons'
-
-const mockWrongAnswers = [
-  { id: 'w1', question: '栈的入栈和出栈操作遵循什么原则？', myAnswer: 'A. FIFO', correctAnswer: 'B. LIFO',
-    rootCause: '链表基础', causeChain: ['栈 ← 出栈/入栈 ← 链表节点操作 ← 指针概念'],
-    date: '2026-07-15', nodeId: '栈' },
-  { id: 'w2', question: '以下哪项不是二叉树的性质？', myAnswer: 'C', correctAnswer: 'D',
-    rootCause: '二叉树定义', causeChain: ['二叉树性质 ← 二叉树定义 ← 非线性结构概念'],
-    date: '2026-07-14', nodeId: '二叉树' },
-]
-
-const WrongAnswerPage = () => (
-  <div style={{ maxWidth: 800, margin: '0 auto' }}>
-    <h2 style={{ fontSize: 'var(--text-xl)', fontWeight: 600, marginBottom: 24 }}>错题本</h2>
-    {mockWrongAnswers.length === 0 ? <Empty description="暂无错题" /> : (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {mockWrongAnswers.map((w) => (
-          <div key={w.id} style={{ padding: 16, background: '#fff', borderRadius: 8, border: '0.5px solid var(--color-border)' }}>
-            <div style={{ fontWeight: 500, marginBottom: 8 }}>{w.question}</div>
-            <div style={{ display: 'flex', gap: 16, marginBottom: 12, fontSize: 13 }}>
-              <span>你的答案：<Tag color="red">{w.myAnswer}</Tag></span>
-              <span>正确答案：<Tag color="green">{w.correctAnswer}</Tag></span>
-              <span style={{ color: 'var(--color-text-tertiary)' }}>{w.date}</span>
-            </div>
-            {/* 因果追溯链 */}
-            <div style={{ padding: 8, background: '#F4F0FF', borderRadius: 6 }}>
-              <div style={{ fontWeight: 500, marginBottom: 4, fontSize: 13 }}>薄弱点溯源</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap', fontSize: 12 }}>
-                {w.causeChain.map((node, i) => (
-                  <span key={i}>
-                    {i > 0 && <span style={{ color: 'var(--color-primary)' }}> ← </span>}
-                    <Tag color="purple">{node}</Tag>
-                  </span>
-                ))}
-                <span style={{ marginLeft: 8 }}>
-                  <Tag color="red">根源：{w.rootCause}</Tag>
-                </span>
-              </div>
-            </div>
-            <Space style={{ marginTop: 12 }}>
-              <Button size="small" icon={<RedoOutlined />}>重做</Button>
-              <Button size="small" type="link" icon={<LinkOutlined />}>查看关联知识点</Button>
-            </Space>
-          </div>
-        ))}
-      </div>
-    )}
-  </div>
-)
-
-export default WrongAnswerPage
-```
-
-### 21. 贡献页
+### 20. 贡献页
 
 **`src/pages/student/contributions/index.tsx`**
 
@@ -5130,41 +5070,499 @@ export default AIPanel
 
 ---
 
-## 25. 路由补全
+## 25. 课程广场 + 邀请码加入 + 教师学生管理
 
-所有新页面需要注册到路由表。更新 **`src/router/index.tsx`**，在原有基础上追加导入和路由：
+### 目的
+
+实现学生加入课程的两种方式：
+1. 浏览课程广场 → 申请加入 → 教师审批
+2. 输入邀请码 → 直接加入
+
+以及教师端的申请审批与邀请码管理。
+
+### 25.1 扩展 Mock 数据
+
+**在 `src/api/mock/dashboard.ts` 末尾追加**：
+
+```typescript
+// ── 课程广场 & 加入课程 Mock 数据 ──
+
+export interface BrowseCourse {
+  id: string
+  name: string
+  teacherName: string
+  className: string
+  semester: string
+  subject: string
+  description: string
+  nodeCount: number
+  enrolledStudentCount: number
+  enrollmentStatus: 'not_joined' | 'pending' | 'joined'  // 当前学生的状态
+}
+
+export const mockBrowseCourses: BrowseCourse[] = [
+  {
+    id: 'course-1', name: '数据结构', teacherName: '张老师', className: '计科 2101 班',
+    semester: '2025-2026-1', subject: 'data-structure',
+    description: '涵盖线性表、栈与队列、树与二叉树、图、排序算法等核心数据结构与算法。',
+    nodeCount: 186, enrolledStudentCount: 42, enrollmentStatus: 'joined',
+  },
+  {
+    id: 'course-2', name: '操作系统', teacherName: '李老师', className: '计科 2101 班',
+    semester: '2025-2026-1', subject: 'os',
+    description: '进程管理、内存管理、文件系统、I/O 系统等操作系统核心概念与原理。',
+    nodeCount: 124, enrolledStudentCount: 38, enrollmentStatus: 'pending',
+  },
+  {
+    id: 'course-3', name: '计算机网络', teacherName: '王老师', className: '计科 2102 班',
+    semester: '2025-2026-1', subject: 'network',
+    description: '从物理层到应用层的 TCP/IP 协议栈，涵盖 HTTP、TCP、IP、DNS 等核心协议。',
+    nodeCount: 98, enrolledStudentCount: 55, enrollmentStatus: 'not_joined',
+  },
+  {
+    id: 'course-4', name: '数据库原理', teacherName: '赵老师', className: '计科 2103 班',
+    semester: '2025-2026-1', subject: 'db',
+    description: '关系模型、SQL、事务管理、索引与查询优化等数据库核心技术。',
+    nodeCount: 0, enrolledStudentCount: 15, enrollmentStatus: 'not_joined',
+  },
+]
+
+// ── 教师端：加入申请 Mock 数据 ──
+
+export interface EnrollmentRequestItem {
+  id: string
+  studentName: string
+  studentId: string      // 学号
+  courseId: string
+  courseName: string
+  message: string        // 申请留言
+  status: 'pending' | 'approved' | 'rejected'
+  createdAt: string
+}
+
+export const mockEnrollmentRequests: EnrollmentRequestItem[] = [
+  { id: 'er-1', studentName: '李明', studentId: '20241501', courseId: 'course-1',
+    courseName: '数据结构', message: '我对数据结构非常感兴趣，希望能在张老师的课程中深入学习。',
+    status: 'pending', createdAt: '20 分钟前' },
+  { id: 'er-2', studentName: '王芳', studentId: '20241502', courseId: 'course-1',
+    courseName: '数据结构', message: '我是转专业学生，需要补修这门课。',
+    status: 'pending', createdAt: '1 小时前' },
+  { id: 'er-3', studentName: '赵强', studentId: '20241503', courseId: 'course-1',
+    courseName: '数据结构', message: '',
+    status: 'approved', createdAt: '昨天' },
+]
+
+// ── 教师端：邀请码 Mock 数据 ──
+
+export interface InviteCodeItem {
+  id: string
+  code: string
+  courseId: string
+  maxUses: number | null     // null = 无限
+  usedCount: number
+  expiresAt: string | null
+  isActive: boolean
+  createdAt: string
+}
+
+export const mockInviteCodes: InviteCodeItem[] = [
+  { id: 'ic-1', code: 'DSK2025', courseId: 'course-1', maxUses: 50, usedCount: 42,
+    expiresAt: '2026-09-01', isActive: true, createdAt: '2026-07-01' },
+  { id: 'ic-2', code: 'DSKOPEN', courseId: 'course-1', maxUses: null, usedCount: 12,
+    expiresAt: null, isActive: true, createdAt: '2026-07-10' },
+  { id: 'ic-3', code: 'DSKOLD1', courseId: 'course-1', maxUses: 30, usedCount: 30,
+    expiresAt: '2026-07-01', isActive: false, createdAt: '2026-06-15' },
+]
+```
+
+### 25.2 邀请码加入（学生仪表盘嵌入组件）
+
+**更新 `src/pages/student/dashboard/index.tsx`**，在欢迎语下方添加邀请码输入区：
+
+```tsx
+// 在学生仪表盘欢迎语和课程列表之间插入以下代码
+
+import { Input, message } from 'antd'
+import { KeyOutlined } from '@ant-design/icons'
+
+// 在 StudentDashboard 组件内添加：
+const [inviteCode, setInviteCode] = useState('')
+const [joining, setJoining] = useState(false)
+
+const handleJoinByCode = async () => {
+  if (!inviteCode.trim()) return
+  setJoining(true)
+  await new Promise(r => setTimeout(r, 1000))
+  message.success(`成功加入课程！邀请码：${inviteCode}`)
+  setInviteCode('')
+  setJoining(false)
+}
+
+// 在欢迎语下方、课程列表上方添加：
+{/* ── 邀请码加入 ── */}
+<div style={{
+  marginBottom: 'var(--space-5)',
+  padding: '12px 16px',
+  background: '#fff',
+  borderRadius: 8,
+  border: '0.5px solid var(--color-border)',
+  display: 'flex',
+  alignItems: 'center',
+  gap: 12,
+}}>
+  <KeyOutlined style={{ fontSize: 20, color: 'var(--color-primary)' }} />
+  <Input
+    placeholder="输入课程邀请码加入班级"
+    value={inviteCode}
+    onChange={e => setInviteCode(e.target.value.toUpperCase())}
+    onPressEnter={handleJoinByCode}
+    style={{ flex: 1, maxWidth: 280 }}
+  />
+  <Button type="primary" loading={joining} onClick={handleJoinByCode} disabled={!inviteCode.trim()}>
+    立即加入
+  </Button>
+</div>
+```
+
+### 25.3 课程广场页
+
+**`src/pages/student/courses-browse/index.tsx`**
+
+```tsx
+// 课程广场 — 浏览 + 申请加入
+
+import { useState } from 'react'
+import { Input, Select, Tag, Button, Modal, message } from 'antd'
+import { SearchOutlined, UserOutlined, ApartmentOutlined } from '@ant-design/icons'
+import { mockBrowseCourses } from '../../../api/mock/dashboard'
+
+const subjectLabels: Record<string, string> = {
+  'data-structure': '数据结构',
+  'os': '操作系统',
+  'network': '计算机网络',
+  'db': '数据库',
+}
+
+const statusConfig = {
+  joined:     { label: '已加入', color: 'green' },
+  pending:    { label: '审核中', color: 'gold' },
+  not_joined: { label: '未加入', color: 'default' },
+}
+
+const CourseBrowsePage = () => {
+  const [searchText, setSearchText] = useState('')
+  const [subjectFilter, setSubjectFilter] = useState('all')
+  const [applyModal, setApplyModal] = useState<{ open: boolean; course?: typeof mockBrowseCourses[0] }>({ open: false })
+  const [applyMessage, setApplyMessage] = useState('')
+
+  const filtered = mockBrowseCourses.filter((c) => {
+    if (searchText && !c.name.includes(searchText) && !c.teacherName.includes(searchText)) return false
+    if (subjectFilter !== 'all' && c.subject !== subjectFilter) return false
+    return true
+  })
+
+  const handleApply = (course: typeof mockBrowseCourses[0]) => {
+    setApplyModal({ open: true, course })
+    setApplyMessage('')
+  }
+
+  const handleSubmitApply = () => {
+    message.success(`已向「${applyModal.course?.name}」提交加入申请，请等待教师审批。`)
+    setApplyModal({ open: false })
+  }
+
+  return (
+    <div>
+      <h2 style={{ fontSize: 'var(--text-xl)', fontWeight: 600, marginBottom: 24 }}>课程广场</h2>
+
+      {/* 搜索 + 筛选 */}
+      <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
+        <Input prefix={<SearchOutlined />} placeholder="搜索课程名称或教师..." style={{ width: 320 }}
+          value={searchText} onChange={(e) => setSearchText(e.target.value)} />
+        <Select value={subjectFilter} onChange={setSubjectFilter} style={{ width: 160 }}
+          options={[
+            { value: 'all', label: '全部分类' },
+            ...Object.entries(subjectLabels).map(([k, v]) => ({ value: k, label: v })),
+          ]} />
+      </div>
+
+      {/* 课程卡片网格 */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
+        {filtered.map((course) => (
+          <div key={course.id} style={{
+            padding: 'var(--space-4)', background: '#fff', borderRadius: 8,
+            border: '0.5px solid var(--color-border)',
+          }}>
+            {/* 课程名 + 状态 */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 4 }}>{course.name}</div>
+                <div style={{ fontSize: 12, color: 'var(--color-text-tertiary)' }}>
+                  {course.teacherName} · {course.className} · {course.semester}
+                </div>
+              </div>
+              <Tag color={statusConfig[course.enrollmentStatus].color}>
+                {statusConfig[course.enrollmentStatus].label}
+              </Tag>
+            </div>
+
+            {/* 课程简介 */}
+            <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 12, lineHeight: 1.5 }}>
+              {course.description}
+            </p>
+
+            {/* 底部：统计 + 操作 */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: 16, fontSize: 12, color: 'var(--color-text-tertiary)' }}>
+                <span><ApartmentOutlined style={{ marginRight: 4 }} />{course.nodeCount} 节点</span>
+                <span><UserOutlined style={{ marginRight: 4 }} />{course.enrolledStudentCount} 人</span>
+              </div>
+
+              {course.enrollmentStatus === 'not_joined' && (
+                <Button size="small" type="primary" onClick={() => handleApply(course)}>
+                  申请加入
+                </Button>
+              )}
+              {course.enrollmentStatus === 'pending' && (
+                <Button size="small" disabled>审核中</Button>
+              )}
+              {course.enrollmentStatus === 'joined' && (
+                <Button size="small" disabled style={{ color: 'var(--color-success)' }}>已加入</Button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* 申请弹窗 */}
+      <Modal
+        title={`申请加入「${applyModal.course?.name}」`}
+        open={applyModal.open}
+        onCancel={() => setApplyModal({ open: false })}
+        onOk={handleSubmitApply}
+        okText="提交申请"
+      >
+        <p style={{ marginBottom: 12, color: 'var(--color-text-secondary)', fontSize: 13 }}>
+          授课教师：{applyModal.course?.teacherName} · {applyModal.course?.className}
+        </p>
+        <Input.TextArea
+          value={applyMessage}
+          onChange={(e) => setApplyMessage(e.target.value)}
+          placeholder="申请留言（可选）：简单介绍你为什么想加入这门课"
+          rows={3}
+        />
+      </Modal>
+    </div>
+  )
+}
+
+export default CourseBrowsePage
+```
+
+### 25.4 教师端学生管理页
+
+**`src/pages/teacher/enrollments/index.tsx`**
+
+```tsx
+// 教师端 — 学生管理（申请审批 + 邀请码管理）
+
+import { useState } from 'react'
+import { Tabs, Button, Table, Tag, Input, message, Tooltip, Modal, Select, DatePicker } from 'antd'
+import { CopyOutlined, StopOutlined, PlusOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons'
+import { mockEnrollmentRequests, mockInviteCodes } from '../../../api/mock/dashboard'
+
+const EnrollmentsPage = () => {
+  const [activeTab, setActiveTab] = useState('requests')
+  const [requests, setRequests] = useState(mockEnrollmentRequests)
+  const [inviteCodes, setInviteCodes] = useState(mockInviteCodes)
+  const [selectedReqIds, setSelectedReqIds] = useState<string[]>([])
+
+  // ── 审批操作 ──
+  const handleApprove = (id: string) => {
+    setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, status: 'approved' as const } : r)))
+    message.success('已通过申请')
+  }
+  const handleReject = (id: string) => {
+    setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, status: 'rejected' as const } : r)))
+    message.info('已拒绝申请')
+  }
+  const handleBatchApprove = () => {
+    setRequests((prev) => prev.map((r) => (selectedReqIds.includes(r.id) ? { ...r, status: 'approved' as const } : r)))
+    message.success(`已批量通过 ${selectedReqIds.length} 个申请`)
+    setSelectedReqIds([])
+  }
+
+  // ── 邀请码操作 ──
+  const handleCreateCode = () => {
+    const newCode: typeof mockInviteCodes[0] = {
+      id: `ic-${Date.now()}`, code: Math.random().toString(36).substring(2, 8).toUpperCase(),
+      courseId: 'course-1', maxUses: 50, usedCount: 0, expiresAt: null,
+      isActive: true, createdAt: '刚刚',
+    }
+    setInviteCodes((prev) => [newCode, ...prev])
+    message.success('邀请码已生成')
+  }
+  const handleCopyCode = (code: string) => {
+    navigator.clipboard.writeText(code)
+    message.success('已复制邀请码')
+  }
+  const handleDeactivateCode = (id: string) => {
+    setInviteCodes((prev) => prev.map((c) => (c.id === id ? { ...c, isActive: false } : c)))
+    message.info('邀请码已停用')
+  }
+
+  // 申请表格列
+  const requestColumns = [
+    { title: '学生', dataIndex: 'studentName', key: 'studentName', render: (name: string, r: any) => (
+      <span>{name} <span style={{ color: 'var(--color-text-tertiary)', fontSize: 12 }}>{r.studentId}</span></span>
+    )},
+    { title: '申请留言', dataIndex: 'message', key: 'message', ellipsis: true,
+      render: (msg: string) => msg || <span style={{ color: 'var(--color-text-tertiary)' }}>（无留言）</span> },
+    { title: '时间', dataIndex: 'createdAt', key: 'createdAt', width: 120 },
+    { title: '状态', dataIndex: 'status', key: 'status', width: 90,
+      render: (s: string) => (
+        <Tag color={s === 'approved' ? 'green' : s === 'rejected' ? 'red' : 'gold'}>
+          {s === 'approved' ? '已通过' : s === 'rejected' ? '已拒绝' : '待处理'}
+        </Tag>
+      ) },
+    { title: '操作', key: 'actions', width: 140,
+      render: (_: any, r: any) => r.status === 'pending' ? (
+        <div style={{ display: 'flex', gap: 4 }}>
+          <Button size="small" type="primary" icon={<CheckOutlined />} onClick={() => handleApprove(r.id)}>通过</Button>
+          <Button size="small" danger icon={<CloseOutlined />} onClick={() => handleReject(r.id)}>拒绝</Button>
+        </div>
+      ) : null },
+  ]
+
+  // 邀请码表格列
+  const codeColumns = [
+    { title: '邀请码', dataIndex: 'code', key: 'code', render: (code: string, r: any) => (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 16, letterSpacing: 2 }}>{code}</span>
+        <Tooltip title="复制"><Button size="small" type="text" icon={<CopyOutlined />} onClick={() => handleCopyCode(code)} /></Tooltip>
+      </div>
+    )},
+    { title: '已用/上限', key: 'usage', render: (_: any, r: any) => (
+      <span>{r.usedCount} / {r.maxUses ?? '∞'}</span>
+    ) },
+    { title: '过期时间', dataIndex: 'expiresAt', key: 'expiresAt', render: (d: string | null) => d || '永久有效' },
+    { title: '状态', dataIndex: 'isActive', key: 'isActive', render: (a: boolean) => (
+      <Tag color={a ? 'green' : 'default'}>{a ? '有效' : '已停用'}</Tag>
+    ) },
+    { title: '操作', key: 'actions', render: (_: any, r: any) => r.isActive ? (
+      <Button size="small" icon={<StopOutlined />} onClick={() => handleDeactivateCode(r.id)}>停用</Button>
+    ) : null },
+  ]
+
+  return (
+    <div>
+      <h2 style={{ fontSize: 'var(--text-xl)', fontWeight: 600, marginBottom: 24 }}>学生管理</h2>
+
+      <Tabs activeKey={activeTab} onChange={setActiveTab}
+        items={[
+          {
+            key: 'requests',
+            label: `加入申请 (${requests.filter((r) => r.status === 'pending').length})`,
+            children: (
+              <div>
+                {selectedReqIds.length > 0 && (
+                  <div style={{ marginBottom: 12 }}>
+                    <Button type="primary" onClick={handleBatchApprove}>
+                      批量通过 ({selectedReqIds.length})
+                    </Button>
+                  </div>
+                )}
+                <Table dataSource={requests} columns={requestColumns} rowKey="id" size="middle"
+                  rowSelection={{
+                    selectedRowKeys: selectedReqIds,
+                    onChange: (keys) => setSelectedReqIds(keys as string[]),
+                    getCheckboxProps: (r: any) => ({ disabled: r.status !== 'pending' }),
+                  }}
+                  style={{ background: '#fff', borderRadius: 8 }}
+                />
+              </div>
+            ),
+          },
+          {
+            key: 'invite-codes',
+            label: '邀请码管理',
+            children: (
+              <div>
+                <div style={{ marginBottom: 16 }}>
+                  <Button type="primary" icon={<PlusOutlined />} onClick={handleCreateCode}>
+                    生成新邀请码
+                  </Button>
+                </div>
+                <Table dataSource={inviteCodes} columns={codeColumns} rowKey="id" size="middle"
+                  style={{ background: '#fff', borderRadius: 8 }}
+                />
+              </div>
+            ),
+          },
+        ]}
+      />
+    </div>
+  )
+}
+
+export default EnrollmentsPage
+```
+
+### 25.5 路由补全
+
+更新路由表，追加新页面的导入和路由：
 
 ```tsx
 // 追加导入
-import TeacherMaterials  from '../pages/teacher/materials'
-import TeacherExercises  from '../pages/teacher/exercises'
-import TeacherAnalytics  from '../pages/teacher/analytics'
-import TeacherSettings   from '../pages/teacher/settings'
-import TeacherVersions   from '../pages/teacher/graph/versions'
-import StudentExercises  from '../pages/student/exercises'
-import StudentWrongAnswers from '../pages/student/wrong-answers'
-import StudentContributions from '../pages/student/contributions'
-import StudentSettings   from '../pages/student/settings'
+import TeacherEnrollments from '../pages/teacher/enrollments'
+import CourseBrowse     from '../pages/student/courses-browse'
+// 删除：import StudentWrongAnswers from ...
 
-// 教师端路由追加到 children
+// 教师端追加
+{ path: 'courses/:courseId/enrollments', element: <TeacherEnrollments /> },
+
+// 学生端追加
+{ path: 'courses/browse',    element: <CourseBrowse /> },
+// 删除：{ path: 'wrong-answers', ... }
+```
+
+---
+
+## 26. 路由补全（汇总）
+
+所有页面路由注册的最终版本：
+
+```tsx
+// 教师端 children
+{ index: true, element: <TeacherDashboard /> },
+{ path: 'dashboard', element: <TeacherDashboard /> },
+{ path: 'courses/new', element: <TeacherCreateCourse /> },
+{ path: 'courses/:courseId/graph', element: <TeacherGraph /> },
+{ path: 'courses/:courseId/graph/versions', element: <TeacherVersions /> },
 { path: 'courses/:courseId/materials',  element: <TeacherMaterials /> },
 { path: 'courses/:courseId/exercises',  element: <TeacherExercises /> },
 { path: 'courses/:courseId/analytics',  element: <TeacherAnalytics /> },
-{ path: 'courses/:courseId/graph/versions', element: <TeacherVersions /> },
+{ path: 'courses/:courseId/enrollments', element: <TeacherEnrollments /> },
+{ path: 'review',    element: <TeacherReview /> },
 { path: 'settings',  element: <TeacherSettings /> },
 
-// 学生端路由追加
-{ path: 'courses/:courseId/exercises',  element: <StudentExercises /> },
-{ path: 'wrong-answers',   element: <StudentWrongAnswers /> },
-{ path: 'contributions',   element: <StudentContributions /> },
-{ path: 'settings',        element: <StudentSettings /> },
+// 学生端 children
+{ index: true, element: <StudentDashboard /> },
+{ path: 'dashboard',     element: <StudentDashboard /> },
+{ path: 'courses/browse', element: <CourseBrowse /> },
+{ path: 'courses/:courseId/graph', element: <StudentGraph /> },
+{ path: 'courses/:courseId/exercises', element: <StudentExercises /> },
+{ path: 'private-graph/:graphId', element: <StudentPrivateGraph /> },
+{ path: 'pr/:prId',       element: <StudentPR /> },
+{ path: 'contributions',  element: <StudentContributions /> },
+{ path: 'settings',       element: <StudentSettings /> },
 ```
 
 ---
 
 ## 完成总结
 
-至此，**全部 18 个页面 + 5 个共享组件**的教程已写完。最终文件结构：
+至此，**全部 19 个页面 + 5 个共享组件**的教程已写完。最终文件结构：
 
 ```
 src/
@@ -5192,20 +5590,21 @@ src/
 │   │   ├── materials/              ← P5
 │   │   ├── exercises/              ← P6
 │   │   ├── analytics/              ← P7
+│   │   ├── enrollments/            ← P18 ★
 │   │   ├── review/                 ← P8
 │   │   └── settings/               ← P9
 │   └── student/
-│       ├── dashboard/              ← P10
+│       ├── dashboard/              ← P10 (含邀请码入口)
+│       ├── courses-browse/         ← P19 ★
 │       ├── graph/                  ← P11
 │       ├── exercises/              ← P12
 │       ├── private-graph/          ← P13
 │       ├── pr/                     ← P14
-│       ├── wrong-answers/          ← P15
-│       ├── contributions/          ← P16
-│       └── settings/               ← P17
+│       ├── contributions/          ← P15
+│       └── settings/               ← P16
 ├── router/index.tsx                ← 路由表
 ├── api/mock/
-│   ├── dashboard.ts                ← 仪表盘 Mock 数据
+│   ├── dashboard.ts                ← 仪表盘 + 课程广场 + 申请审批 Mock
 │   └── graph.ts                    ← 图谱 Mock 数据
 ├── stores/                         ← Zustand（后续）
 ├── styles/                         ← CSS 变量 + Reset
@@ -5226,11 +5625,12 @@ src/
 | 16-17 | 资料/习题 | 文件上传、表格编辑、弹窗表单 |
 | 18 | 学生练习 | 答题、判分、Result 反馈 |
 | 19 | 学情看板 | 薄弱点排名、学生进度表 |
-| 20 | 错题本 | 因果追溯链展示 |
-| 21 | 贡献页 | 热力图、徽章墙 |
-| 22 | 设置页 | 教师/学生共享结构 |
-| 23 | Markdown 编辑器 | Tabs 编辑/预览、工具栏 |
-| 24 | AI 面板 | 对话列表、流式占位、引用 Note、反馈按钮 |
-| 25 | 路由补全 | 所有页面路由注册 |
+| 20 | 贡献页 | 热力图、徽章墙 |
+| 21 | 设置页 | 教师/学生共享结构（含审核流程配置） |
+| 22 | Markdown 编辑器 | Tabs 编辑/预览、工具栏 |
+| 23 | AI 面板 | 对话列表、流式占位、引用 Note、反馈按钮 |
+| 24 | 邀请码加入 | 学生仪表盘嵌入邀请码输入 → 直接加入课程 |
+| 25 | 课程广场 + 学生管理 | 浏览公开课程申请加入 + 教师审批 + 邀请码生成管理 |
+| 26 | 路由补全 | 所有页面路由注册 |
 
 所有代码均为可运行状态（mock 数据驱动），开发时逐一创建文件、`npm run dev` 验证即可。
