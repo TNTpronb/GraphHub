@@ -75,25 +75,21 @@
 
 ### P3. 图谱管理页 `/teacher/courses/:courseId/graph`
 
-> 教师日常编辑图谱的主页面。**右侧可展开 AI 辅导员面板。**
+> 教师日常编辑图谱的主页面。**左侧内容侧边栏放树状列表（布局壳提供，宽度可拖拽），右侧可展开 AI 辅导员面板。**
 
 | 区域 | 组件 | 说明 |
 |------|------|------|
-| **顶部工具栏** | 视图模式切换 | 仅网络图 / 仅树状列表 / 左右双栏 |
-| | 搜索框 | 搜索节点名称，回车定位 |
+| **左侧内容侧边栏**（可拖拽宽度） | `<TreeNodeList>` | ★ 树状目录（由布局壳提供空间，宽度可拖拽调整 200-480px） |
+| **顶部工具栏** | 搜索框 | 搜索节点名称，回车定位 |
 | | 标签筛选下拉 | 按 `#knowledge-point` / `#chapter` 等筛选 |
 | | 新增节点按钮 | 弹出 `<NoteEditDrawer>` + `<MarkdownEditor>` |
 | | 导出按钮 | Markdown / JSON / 思维导图 |
 | | AI 面板开关 | 切换右侧 AIPanel 展开/收起 |
-| **左侧主区域** | `<GraphCanvas>` | AntV G6 网络图：拖拽、缩放、hover 高亮邻居+tooltip、右键菜单（编辑/添加关系/删除） |
-| | `<TreeNodeList>` | 树状目录，按章节层级展开；可拖拽调整层级；点击节点联动网络图 |
+| **中间主区域** | `<GraphCanvas>` | AntV G6 网络图：拖拽、缩放、hover 高亮邻居+tooltip、右键菜单（编辑/添加关系/删除） |
 | | `<GraphMiniMap>` | 右下角缩略导航 |
 | **右侧详情面板** | `<NoteDetailPanel>` | 点击节点后展示：标题、标签、Markdown 渲染、关系列表、已挂载资源 |
 | | → `<NoteEditDrawer>` | 点击编辑按钮弹出：Markdown 编辑器、标签编辑、关系增删 |
-| | → `<RelationEditor>` | 在抽屉内，添加/删除与该节点的关系 |
-| | → `<MountedResources>` | 已挂载的资料和习题链接 |
 | **右侧 AI 面板**（可收起） | `<AIPanel>` | 聊天列表、输入框、引用 Note 跳转、点赞/纠错 |
-| **右下角** | `<GraphMiniMap>` | 缩略图导航 |
 
 ### P4. 版本历史页 `/teacher/courses/:courseId/graph/versions`
 

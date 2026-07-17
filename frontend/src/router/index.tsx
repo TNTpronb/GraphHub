@@ -10,6 +10,8 @@ import StudentLayout from '../components/layout/StudentLayout'
 
 // ── 页面（目前都是占位组件） ──
 import LoginPage            from '../pages/login'
+import RegisterPage         from '../pages/register'
+import ForgotPasswordPage   from '../pages/forgot-password'
 import TeacherDashboard     from '../pages/teacher/dashboard'
 import TeacherGraph         from '../pages/teacher/graph'
 import TeacherReview        from '../pages/teacher/review'
@@ -20,10 +22,18 @@ import StudentPR            from '../pages/student/pr'
 import StudentPrivateGraph  from '../pages/student/private-graph'
 
 const router = createBrowserRouter([
-  // ── 登录页（独立路由，无布局壳） ──
+  // ── 登录/注册/忘记密码（独立路由，无布局壳） ──
   {
     path: '/login',
     element: <LoginPage />,
+  },
+  {
+    path: '/register',
+    element: <RegisterPage />,
+  },
+  {
+    path: '/forgot-password',
+    element: <ForgotPasswordPage />,
   },
 
   // ── 教师端 ──

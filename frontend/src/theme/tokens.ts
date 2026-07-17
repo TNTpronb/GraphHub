@@ -19,7 +19,7 @@ const themeConfig: ThemeConfig = {
     colorText:         colorTextBase,            // 正文
     colorTextSecondary:'#6B6B6B',                // 次要文字
     colorTextTertiary: '#999999',                // 辅助文字
-    colorLink:         colorPrimary,             // 链接色 = 主色
+    colorLink:         '#539BF5',                  // 浅蓝链接色
 
     // 字体
     fontSize:   14,                              // 默认字号 14px
@@ -91,8 +91,8 @@ const themeConfig: ThemeConfig = {
     // 菜单项
     Menu: {
       itemHeight:       36,
-      itemBorderRadius: 0,
-      subMenuItemBorderRadius: 0,
+      itemBorderRadius: 6,
+      subMenuItemBorderRadius: 6,
     },
 
     // 标签页

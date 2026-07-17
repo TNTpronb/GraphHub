@@ -157,21 +157,17 @@ AI 辅导员只在以下页面出现（公有图谱专属）：
       │   └── <Outlet>
       │       ├── <GraphManagePage>
       │       │   ├── <ViewToolbar />
-      │       │   │   ├── <ViewModeSwitch />       # 网络图 / 树状列表 / 双栏
       │       │   │   ├── <SearchBar />
       │       │   │   ├── <FilterByTag />
       │       │   │   ├── <ActionButtons />        # 新增节点、导入、导出
       │       │   │   └── <AIToggleButton />       # ★ 开关 AI 面板
-      │       │   ├── <SplitPane>                  # 左右分栏
-      │       │   │   ├── <GraphViewer />          # ★ 双视图
-      │       │   │   │   ├── <GraphCanvas />      # AntV G6 网络图
-      │       │   │   │   │   ├── <GraphNode />
-      │       │   │   │   │   └── <GraphEdge />
-      │       │   │   │   └── <TreeNodeList />
-      │       │   │   └── <AIPanel />              # ★ 仅此页面嵌入（不是全局）
-      │       │   │       ├── <ChatMessageList />
-      │       │   │       ├── <ChatInput />
-      │       │   │       └── <CitedNotes />
+      │       │   ├── <TreeNodeList />             # ★ 树状列表（放入布局壳的内容侧边栏，宽度可拖拽）
+      │       │   ├── <GraphViewer />              # 网络图（主内容区）
+      │       │   │   └── <GraphCanvas />
+      │       │   ├── <AIPanel />                  # ★ 右侧可收起
+      │       │   │   ├── <ChatMessageList />
+      │       │   │   ├── <ChatInput />
+      │       │   │   └── <CitedNotes />
       │       │   ├── <NoteDetailPanel />
       │       │   │   ├── <MarkdownRenderer />
       │       │   │   ├── <TagEditor />
@@ -311,19 +307,15 @@ AI 辅导员只在以下页面出现（公有图谱专属）：
       │   └── <Outlet>
       │       ├── <GraphBrowsePage>
       │       │   ├── <ViewToolbar />
-      │       │   │   ├── <ViewModeSwitch />
       │       │   │   ├── <SearchBar />
       │       │   │   ├── <FilterByTag />
       │       │   │   ├── <ForkButton />
       │       │   │   └── <AIToggleButton />
-      │       │   ├── <SplitPane>
-      │       │   │   ├── <GraphViewer readOnly />
-      │       │   │   │   ├── <GraphCanvas />
-      │       │   │   │   │   ├── <GraphNode />
-      │       │   │   │   │   ├── <GraphEdge />
-      │       │   │   │   │   └── <MasteryOverlay />
-      │       │   │   │   └── <TreeNodeList />
-      │       │   │   └── <AIPanel />              # ★ 仅此页面嵌入
+      │       │   ├── <TreeNodeList />             # ★ 放入内容侧边栏
+      │       │   ├── <GraphViewer readOnly />
+      │       │   │   └── <GraphCanvas />
+      │       │   │       └── <MasteryOverlay />
+      │       │   ├── <AIPanel />                  # ★ 仅此页面嵌入
       │       │   ├── <NoteDetailPanel />
       │       │   │   ├── <MarkdownRenderer />
       │       │   │   ├── <MountedResources />

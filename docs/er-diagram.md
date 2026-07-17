@@ -68,7 +68,20 @@ erDiagram
 | role | ENUM(admin, teacher, group_leader, student) | 角色 |
 | class_id | FK → Class NULLABLE | 主归属班级（可为空，学生可通过邀请码或申请加入跨班课程） |
 | password_hash | VARCHAR(256) | |
+| phone | VARCHAR(20) UNIQUE NOT NULL | ★ 注册时强制绑定，用于登录/找回密码 |
+| email | VARCHAR(256) UNIQUE NULLABLE | ★ 注册时可选绑定，一个手机号/邮箱只能对应一个账号 |
 | avatar_url | VARCHAR(512) | |
+| created_at | DATETIME | |
+
+#### VerificationCode（验证码）
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | UUID PK | |
+| target | VARCHAR(256) | 手机号或邮箱地址 |
+| code | VARCHAR(6) | 6 位数字验证码 |
+| type | ENUM(register, login, reset_password) | 验证码用途 |
+| used | BOOLEAN DEFAULT false | 是否已使用 |
+| expires_at | DATETIME | 有效期（通常 5-10 分钟） |
 | created_at | DATETIME | |
 
 #### Class（班级）
@@ -571,8 +584,9 @@ graph LR
 | 15 | `course_enrollments` | 必须 | 学生注册课程（多对多桥接） |
 | 16 | `invite_codes` | 必须 | 课程邀请码 |
 | 17 | `enrollment_requests` | 必须 | 学生加入申请审批 |
-| 18 | `badges` | V2.0 | 徽章体系 |
-| 19 | `user_badges` | V2.0 | 徽章关联 |
+| 18 | `verification_codes` | 必须 | 注册/登录/找回密码验证码 |
+| 19 | `badges` | V2.0 | 徽章体系 |
+| 20 | `user_badges` | V2.0 | 徽章关联 |
 
 **Neo4j 侧（V1.0 全部需要）**
 

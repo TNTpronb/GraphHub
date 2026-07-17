@@ -79,7 +79,9 @@ src/
 │   ├── pr/              #   PR 相关组件（DiffViewer、StatusBadge）
 │   └── common/          #   通用小组件（Loading、Empty、ErrorBoundary）
 ├── pages/               # 页面组件
-│   ├── login/           #   登录页
+│   ├── login/            #   登录页
+│   ├── register/         #   注册页
+│   ├── forgot-password/  #   找回密码页
 │   ├── teacher/         #   教师端
 │   │   ├── dashboard/   #     首页
 │   │   ├── graph/       #     图谱管理
@@ -581,6 +583,8 @@ import StudentLayout from '../components/layout/StudentLayout'
 
 // ── 页面（目前都是占位组件） ──
 import LoginPage            from '../pages/login'
+import RegisterPage         from '../pages/register'
+import ForgotPasswordPage   from '../pages/forgot-password'
 import TeacherDashboard     from '../pages/teacher/dashboard'
 import TeacherGraph         from '../pages/teacher/graph'
 import TeacherReview        from '../pages/teacher/review'
@@ -609,10 +613,18 @@ import StudentPrivateGraph  from '../pages/student/private-graph'
 */
 
 const router = createBrowserRouter([
-  // ── 登录页（独立路由，无布局壳） ──
+  // ── 登录/注册/忘记密码（独立路由，无布局壳） ──
   {
     path: '/login',
     element: <LoginPage />,
+  },
+  {
+    path: '/register',
+    element: <RegisterPage />,
+  },
+  {
+    path: '/forgot-password',
+    element: <ForgotPasswordPage />,
   },
 
   // ── 教师端 ──
@@ -693,37 +705,47 @@ export default App
 
 ### 目的
 
-实现真正的 Header + Sidebar 布局。这是整个应用的外壳，后续所有页面都在这个壳里渲染。
+实现 GitHub 风格的布局：36px Header + 汉堡菜单触发的 320px 侧滑 Drawer 导航 + 可拖拽宽度的内容侧边栏。这是整个应用的外壳。
 
 ### 设计稿参考
 
 ```
-┌──────────────────────────────────────────────────────┐
-│ Header  高度 48px  白底  底部 0.5px 边框  #CECECE      │
-│  Logo(32px)         [课程下拉]      [通知] [头像]     │
-├──────────┬───────────────────────────────────────────┤
-│ Sidebar  │  Content（Outlet 渲染）                    │
-│ 宽 240px │  padding 24px, max-width 1280px 居中      │
-│          │                                           │
-│ 课程切换 │                                           │
-│ 图谱管理 │                                           │
-│ 课程资料 │                                           │
-│ 习题库   │                                           │
-│ 学情分析 │                                           │
-│ ─────── │                                           │
-│ 首页     │                                           │
-│ 审核台 🔴│                                           │
-│ 设置     │                                           │
-└──────────┴───────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│ Header 高 36px  白底  底部 0.5px 边框                         │
+│  ☰  KG-Class  [课程下拉]         ┌──┬──┬──┐  ─┐             │
+│                                  │+ │🔔│👤│   │ ← 圆角容器   │
+│                                  └──┴──┴──┘  ─┘             │
+├───┬──────────────────────────────────────────────────────────┤
+│   │  主内容（Outlet）                                         │
+│ 树 │  max-width 1280px 居中   padding 24px                   │
+│ 状 │                                                         │
+│ 列 │← 拖拽柄（可调整宽度）                                     │
+│ 表 │                                                         │
+│   │                                                         │
+└───┴──────────────────────────────────────────────────────────┘
+
+抽屉（汉堡菜单 ☰ 触发，320px 宽）：
+┌──────────────────────────────┐
+│  KG-Class                    │
+│                              │
+│  ┌─────────────────────────┐ │
+│  │ 🏠 首页                  │ │  ← 选中项是窄圆角矩形高亮
+│  ├─────────────────────────┤ │
+│  │ 📊 图谱管理              │ │
+│  │ 📁 课程资料              │ │
+│  │ ...                      │ │
+│  └─────────────────────────┘ │
+└──────────────────────────────┘
 ```
 
 ### 6.1 侧边栏数据配置
 
 **`src/components/layout/sidebarConfig.ts`**
+
 ```typescript
 // 侧边栏菜单项配置
-// 不直接在组件里写死文字，方便后续加权限控制或多语言
 
+import React from 'react'
 import {
   HomeOutlined,
   ApartmentOutlined,
@@ -733,270 +755,248 @@ import {
   FileTextOutlined,
   ExperimentOutlined,
   BarChartOutlined,
+  SearchOutlined,
+  TeamOutlined,
 } from '@ant-design/icons'
 import type { ItemType } from 'antd/es/menu/interface'
 
-// 教师端课程相关菜单（显示在侧边栏上方，课程切换后变化）
+// 教师端课程相关菜单（Drawer 内上半部分）
 export const teacherCourseMenuItems: ItemType[] = [
-  { key: 'graph',     icon: <ApartmentOutlined />, label: '图谱管理' },
-  { key: 'materials', icon: <FileTextOutlined />,   label: '课程资料' },
-  { key: 'exercises', icon: <ExperimentOutlined />,  label: '习题库' },
-  { key: 'analytics', icon: <BarChartOutlined />,    label: '学情分析' },
+  { key: 'graph',       icon: React.createElement(ApartmentOutlined), label: '图谱管理' },
+  { key: 'materials',   icon: React.createElement(FileTextOutlined),   label: '课程资料' },
+  { key: 'exercises',   icon: React.createElement(ExperimentOutlined),  label: '习题库' },
+  { key: 'analytics',   icon: React.createElement(BarChartOutlined),    label: '学情分析' },
+  { key: 'enrollments', icon: React.createElement(TeamOutlined),        label: '学生管理' },
 ]
 
-// 教师端全局菜单（始终显示在侧边栏下方）
+// 教师端全局菜单（Drawer 内下半部分，分割线后）
 export const teacherGlobalMenuItems: ItemType[] = [
-  { key: 'dashboard', icon: <HomeOutlined />,    label: '首页' },
-  { key: 'review',    icon: <AuditOutlined />,    label: '审核工作台' },
-  { key: 'settings',  icon: <SettingOutlined />,  label: '设置' },
+  { key: 'dashboard', icon: React.createElement(HomeOutlined),    label: '首页' },
+  { key: 'review',    icon: React.createElement(AuditOutlined),    label: '审核工作台' },
+  { key: 'settings',  icon: React.createElement(SettingOutlined),  label: '设置' },
 ]
 
 // 学生端菜单
 export const studentMenuItems: ItemType[] = [
-  { key: 'dashboard', icon: <HomeOutlined />,       label: '首页' },
-  { key: 'browse',    icon: <SearchOutlined />,      label: '课程广场' },
-  { key: 'graph',     icon: <ApartmentOutlined />,  label: '图谱浏览' },
-  { key: 'exercises', icon: <ExperimentOutlined />, label: '练习' },
-  { key: 'contributions', icon: <BarChartOutlined />, label: '我的贡献' },
-  { key: 'settings',  icon: <SettingOutlined />,    label: '设置' },
+  { key: 'dashboard',     icon: React.createElement(HomeOutlined),       label: '首页' },
+  { key: 'browse',        icon: React.createElement(SearchOutlined),      label: '课程广场' },
+  { key: 'graph',         icon: React.createElement(ApartmentOutlined),  label: '图谱浏览' },
+  { key: 'exercises',     icon: React.createElement(ExperimentOutlined), label: '练习' },
+  { key: 'contributions', icon: React.createElement(BarChartOutlined),   label: '我的贡献' },
+  { key: 'settings',      icon: React.createElement(SettingOutlined),    label: '设置' },
 ]
 ```
 
 ### 6.2 教师布局壳
 
-**重写 `src/components/layout/TeacherLayout.tsx`**
+**`src/components/layout/TeacherLayout.tsx`**
 
 ```tsx
-// src/components/layout/TeacherLayout.tsx
-// 教师端布局：48px Header + 240px Sidebar + Content
-// 使用 Ant Design Layout 组件构建
+// 教师端布局壳
+// 导航通过汉堡菜单侧滑 Drawer（320px），侧边栏空间留给页面内容（树状列表等）
 
-import { useState } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { Layout, Menu, Select, Badge, Avatar, Dropdown } from 'antd'
+import { Layout, Menu, Select, Badge, Avatar, Dropdown, Drawer, Button } from 'antd'
 import {
+  MenuOutlined,
   PlusOutlined,
   BellOutlined,
   UserOutlined,
   LogoutOutlined,
+  SettingOutlined,
 } from '@ant-design/icons'
 import type { MenuProps } from 'antd'
+import type { MenuItemType } from 'antd/es/menu/interface'
 import {
   teacherCourseMenuItems,
   teacherGlobalMenuItems,
 } from './sidebarConfig'
 
-const { Header, Sider, Content } = Layout
+const { Header, Content } = Layout
 
 const TeacherLayout = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  // 当前选中的课程 ID（后续从 store 获取，现在先写死模拟）
   const [currentCourseId, setCurrentCourseId] = useState<string | undefined>()
+  const [drawerOpen, setDrawerOpen] = useState(false)
 
-  /*
-    从 URL 中提取当前课程 ID
-    例如 /teacher/courses/abc123/graph → 提取 abc123
-    用这个来确定侧边栏菜单的高亮
-  */
+  // 可拖拽内容侧边栏
+  const [sidebarWidth, setSidebarWidth] = useState(280)
+  const [dragging, setDragging] = useState(false)
+  const sidebarRef = useRef<HTMLDivElement>(null)
+
+  // 从 URL 提取课程上下文
   const pathParts = location.pathname.split('/')
   const urlCourseId = pathParts[3] === 'courses' ? pathParts[4] : undefined
-  // URL 中课程后面的子路径（如 graph、materials）
   const urlSubPath = urlCourseId ? pathParts[5] : undefined
 
-  /*
-    侧边栏选中项的逻辑：
-    - 如果在课程内，高亮对应的子菜单项
-    - 否则高亮全局菜单项
-  */
   const selectedKey = urlCourseId
-    ? urlSubPath || 'graph'         // 默认高亮"图谱管理"
-    : pathParts[2] || 'dashboard'   // 例如 /teacher/review → review
+    ? urlSubPath || 'graph'
+    : pathParts[2] || 'dashboard'
 
-  // 点击菜单项跳转
   const onMenuClick: MenuProps['onClick'] = ({ key }) => {
-    // 课程内菜单项 → 加上当前课程 ID 前缀
-    if (urlCourseId && ['graph', 'materials', 'exercises', 'analytics'].includes(key)) {
+    setDrawerOpen(false)
+    if (urlCourseId && ['graph', 'materials', 'exercises', 'analytics', 'enrollments'].includes(key)) {
       navigate(`/teacher/courses/${urlCourseId}/${key}`)
       return
     }
-    // 全局菜单项 → 直接跳转
     if (key === 'dashboard') navigate('/teacher/dashboard')
     if (key === 'review')    navigate('/teacher/review')
     if (key === 'settings')  navigate('/teacher/settings')
   }
 
-  // 模拟课程列表（后续从后端获取）
+  // ── 拖拽调整内容侧边栏宽度 ──
+  const handleMouseDown = useCallback(() => setDragging(true), [])
+
+  useEffect(() => {
+    if (!dragging) return
+    const handleMouseMove = (e: MouseEvent) => {
+      const w = Math.max(200, Math.min(480, e.clientX))
+      setSidebarWidth(w)
+    }
+    const handleMouseUp = () => setDragging(false)
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [dragging])
+
   const mockCourses = [
     { id: 'course-1', name: '数据结构', pendingCount: 3 },
     { id: 'course-2', name: '操作系统', pendingCount: 1 },
   ]
 
+  // 判断当前是否在课程页（需要显示内容侧边栏）
+  const isCoursePage = !!urlCourseId && ['graph', 'materials', 'exercises', 'analytics', 'enrollments'].includes(urlSubPath || '')
+
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      {/* ── 顶部 Header ── */}
-      <Header
-        style={{
-          height: 48,
-          background: '#fff',
-          borderBottom: '0.5px solid var(--color-border)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 16px',
-          lineHeight: '48px',
-        }}
-      >
-        {/* 左侧：Logo + 课程切换 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          {/* Logo：点击回首页 */}
-          <span
-            style={{
-              fontSize: 20,
-              fontWeight: 700,
-              color: 'var(--color-text)',
-              cursor: 'pointer',
-            }}
-            onClick={() => navigate('/teacher/dashboard')}
-          >
+      {/* ── Header 36px ── */}
+      <Header style={{
+        height: 36,
+        background: '#fff',
+        borderBottom: '0.5px solid var(--color-border)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 12px',
+      }}>
+        {/* 左侧：汉堡菜单 + Logo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Button type="text" icon={<MenuOutlined />}
+            onClick={() => setDrawerOpen(true)}
+            style={{ width: 32, height: 32, padding: 0 }} />
+          <span style={{ fontSize: 16, fontWeight: 700, cursor: 'pointer' }}
+            onClick={() => navigate('/teacher/dashboard')}>
             KG-Class
           </span>
-
-          {/* 课程下拉选择器（仅当在课程内时显示） */}
           {urlCourseId && (
-            <Select
-              value={currentCourseId}
-              onChange={(val) => {
-                setCurrentCourseId(val)
-                navigate(`/teacher/courses/${val}/graph`)
-              }}
-              placeholder="选择课程"
-              style={{ width: 200 }}
+            <Select value={currentCourseId}
+              onChange={(val) => { setCurrentCourseId(val); navigate(`/teacher/courses/${val}/graph`) }}
+              placeholder="选择课程" style={{ width: 180 }} size="small"
               options={mockCourses.map((c) => ({
                 value: c.id,
-                // label 里可以加待审红点（此处简化）
-                label: c.pendingCount > 0
-                  ? `${c.name} (${c.pendingCount})`
-                  : c.name,
+                label: c.pendingCount > 0 ? `${c.name} (${c.pendingCount})` : c.name,
               }))}
-              variant="borderless"               // ● 无边框样式，更像 GitHub
-            />
+              variant="borderless" />
           )}
         </div>
 
-        {/* 右侧：操作按钮 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          {/* 新建课程 */}
-          <PlusOutlined
-            style={{ fontSize: 18, cursor: 'pointer' }}
+        {/* 右侧：按钮组放入圆角矩形框（GitHub 风格） */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 2,
+          padding: '0 4px', background: '#FAFAFA',
+          border: '0.5px solid var(--color-border)', borderRadius: 6,
+        }}>
+          <Button type="text" size="small" icon={<PlusOutlined />}
             onClick={() => navigate('/teacher/courses/new')}
-          />
-
-          {/* 通知 */}
-          <Badge count={5} size="small">
-            <BellOutlined style={{ fontSize: 18, cursor: 'pointer' }} />
+            style={{ height: 28, color: 'var(--color-text)' }} />
+          <Badge count={5} size="small" style={{ lineHeight: 1 }}>
+            <Button type="text" size="small" icon={<BellOutlined />}
+              style={{ height: 28, color: 'var(--color-text)' }} />
           </Badge>
-
-          {/* 用户头像 + 下拉菜单 */}
-          <Dropdown
-            menu={{
-              items: [
-                { key: 'settings', icon: <SettingOutlined />, label: '个人设置' },
-                { type: 'divider' },
-                { key: 'logout', icon: <LogoutOutlined />, label: '退出登录', danger: true },
-              ],
-              onClick: ({ key }) => {
-                if (key === 'settings') navigate('/teacher/settings')
-                if (key === 'logout') navigate('/login')
-              },
-            }}
-          >
-            <Avatar
-              size={28}
-              icon={<UserOutlined />}
-              style={{ cursor: 'pointer', backgroundColor: 'var(--color-primary)' }}
-            />
+          <Dropdown menu={{
+            items: [
+              { key: 'settings', icon: <SettingOutlined />, label: '个人设置' },
+              { type: 'divider' },
+              { key: 'logout', icon: <LogoutOutlined />, label: '退出登录', danger: true },
+            ],
+            onClick: ({ key }) => {
+              if (key === 'settings') navigate('/teacher/settings')
+              if (key === 'logout') navigate('/login')
+            },
+          }}>
+            <Avatar size={22} icon={<UserOutlined />}
+              style={{ cursor: 'pointer', backgroundColor: 'var(--color-primary)', marginLeft: 4 }} />
           </Dropdown>
         </div>
       </Header>
 
-      {/* ── 下方：Sidebar + Content ── */}
-      <Layout>
-        {/* 侧边栏 */}
-        <Sider
-          width={240}
-          style={{
-            background: 'var(--color-bg)',
-            borderRight: '0.5px solid var(--color-border)',
-          }}
-        >
-          <div style={{ padding: '12px 0' }}>
-            {/* 课程相关菜单（上半部分） */}
-            <Menu
-              mode="inline"
-              selectedKeys={[selectedKey]}
-              onClick={onMenuClick}
-              items={teacherCourseMenuItems}
-              style={{
-                background: 'transparent',
-                borderInlineEnd: 'none',       // 去掉 AntD 默认的右侧边框
-              }}
-            />
-
-            {/* 分割线 */}
-            <div style={{
-              height: 1,
-              background: 'var(--color-border)',
-              margin: '8px 16px',
-            }} />
-
-            {/* 全局菜单（下半部分） */}
-            <Menu
-              mode="inline"
-              selectedKeys={[selectedKey]}
-              onClick={onMenuClick}
-              items={teacherGlobalMenuItems.map(item => ({
-                ...item,
-                // "审核工作台"加红色数字角标
-                label: item.key === 'review' ? (
-                  <span>
-                    审核工作台
-                    <span style={{
-                      display: 'inline-block',
-                      background: 'var(--color-danger)',
-                      color: '#fff',
-                      fontSize: 11,
-                      borderRadius: 10,
-                      padding: '0 6px',
-                      marginLeft: 8,
-                      lineHeight: '18px',
-                    }}>
-                      5
-                    </span>
-                  </span>
-                ) : item.label,
-              }))}
-              style={{
-                background: 'transparent',
-                borderInlineEnd: 'none',
-              }}
-            />
+      {/* ── 侧滑导航 Drawer ── */}
+      <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)}
+        width={320} closable={false} styles={{ body: { padding: 0 } }}>
+        <div style={{ padding: '12px 0' }}>
+          <div style={{ padding: '8px 20px 16px', fontSize: 18, fontWeight: 700 }}>
+            KG-Class
           </div>
-        </Sider>
+          {/* ● Menu 的 padding: '0 8px' 让选中高亮框比 Drawer 窄，形成圆角矩形效果 */}
+          <Menu mode="inline" selectedKeys={[selectedKey]} onClick={onMenuClick}
+            items={teacherCourseMenuItems}
+            style={{ background: 'transparent', borderInlineEnd: 'none', padding: '0 8px' }} />
+          <div style={{ height: 1, background: 'var(--color-border)', margin: '8px 16px' }} />
+          <Menu mode="inline" selectedKeys={[selectedKey]} onClick={onMenuClick}
+            items={(teacherGlobalMenuItems as MenuItemType[]).map(item => ({
+              ...item,
+              label: item.key === 'review' ? (
+                <span>
+                  审核工作台
+                  <span style={{
+                    display: 'inline-block', background: 'var(--color-danger)',
+                    color: '#fff', fontSize: 11, borderRadius: 10,
+                    padding: '0 6px', marginLeft: 8, lineHeight: '18px',
+                  }}>5</span>
+                </span>
+              ) : item.label,
+            }))}
+            style={{ background: 'transparent', borderInlineEnd: 'none', padding: '0 8px' }} />
+        </div>
+      </Drawer>
 
-        {/* 内容区 */}
-        <Content
-          style={{
-            padding: 24,
-            minHeight: 'calc(100vh - 48px)',
-            background: 'var(--color-bg)',
-          }}
-        >
-          <div style={{
-            maxWidth: 1280,
-            margin: '0 auto',           // 居中
-          }}>
-            <Outlet />
+      {/* ── 内容区：可拖拽内容侧边栏 + 主内容 ── */}
+      <Layout>
+        <Content style={{ display: 'flex', background: 'var(--color-bg)' }}>
+          {/* 内容侧边栏 — 图谱页用来放树状列表 */}
+          {isCoursePage && (
+            <>
+              <div ref={sidebarRef} style={{
+                width: sidebarWidth, flexShrink: 0, background: '#fff',
+                borderRight: '0.5px solid var(--color-border)',
+                overflow: 'auto', padding: 12,
+                transition: dragging ? 'none' : 'width 0.1s',
+              }}>
+                <div style={{ color: 'var(--color-text-tertiary)', fontSize: 13, padding: 8 }}>
+                  树状列表 / 侧边内容区
+                </div>
+              </div>
+              {/* 拖拽手柄 */}
+              <div onMouseDown={handleMouseDown} style={{
+                width: 4, cursor: 'col-resize', flexShrink: 0,
+                background: dragging ? 'var(--color-primary)' : 'transparent',
+                transition: 'background 0.15s',
+              }}
+                onMouseEnter={(e) => { if (!dragging) e.currentTarget.style.background = 'var(--color-primary)' }}
+                onMouseLeave={(e) => { if (!dragging) e.currentTarget.style.background = 'transparent' }}
+              />
+            </>
+          )}
+          {/* 主内容 */}
+          <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
+            <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+              <Outlet />
+            </div>
           </div>
         </Content>
       </Layout>
@@ -1009,120 +1009,136 @@ export default TeacherLayout
 
 ### 6.3 学生布局壳
 
-结构几乎相同，区别：
-- 侧边栏菜单用 `studentMenuItems`
-- Header 无课程下拉（学生用 `CourseSwitcher` 在侧边栏）
-- Header 无 `PlusOutlined`（学生不新建课程）
+结构与教师端相同，区别：侧边栏菜单用 `studentMenuItems`，Header 无 `PlusOutlined`。
 
 **`src/components/layout/StudentLayout.tsx`**
 
 ```tsx
-// src/components/layout/StudentLayout.tsx
 // 学生端布局壳
 
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { Layout, Menu, Badge, Avatar, Dropdown } from 'antd'
+import { Layout, Menu, Badge, Avatar, Dropdown, Drawer, Button } from 'antd'
 import {
-  BellOutlined,
-  UserOutlined,
-  SettingOutlined,
-  LogoutOutlined,
+  MenuOutlined, BellOutlined, UserOutlined,
+  SettingOutlined, LogoutOutlined,
 } from '@ant-design/icons'
 import type { MenuProps } from 'antd'
 import { studentMenuItems } from './sidebarConfig'
 
-const { Header, Sider, Content } = Layout
+const { Header, Content } = Layout
 
 const StudentLayout = () => {
   const navigate = useNavigate()
   const location = useLocation()
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [sidebarWidth, setSidebarWidth] = useState(280)
+  const [dragging, setDragging] = useState(false)
 
-  // 从 URL 提取当前子路径来确定选中菜单项
   const pathParts = location.pathname.split('/')
+  const menuKeyToPath: Record<string, string> = {
+    dashboard: '/student/dashboard',
+    browse:    '/student/courses/browse',
+    graph:     `/student/courses/${pathParts[3] === 'courses' ? pathParts[4] : ''}/graph`,
+    exercises: `/student/courses/${pathParts[3] === 'courses' ? pathParts[4] : ''}/exercises`,
+    contributions: '/student/contributions',
+    settings:  '/student/settings',
+  }
   const urlSubPath = pathParts[3] || pathParts[2] || 'dashboard'
 
-  // 菜单项 key 到 URL 路径的映射
-  const menuKeyToPath: Record<string, string> = {
-    dashboard:     '/student/dashboard',
-    graph:         `/student/courses/${pathParts[3] === 'courses' ? pathParts[4] : ''}/graph`,
-    exercises:     `/student/courses/${pathParts[3] === 'courses' ? pathParts[4] : ''}/exercises`,
-    contributions: '/student/contributions',
-    settings:      '/student/settings',
-  }
-
   const onMenuClick: MenuProps['onClick'] = ({ key }) => {
+    setDrawerOpen(false)
     navigate(menuKeyToPath[key] || '/student/dashboard')
   }
 
+  const handleMouseDown = useCallback(() => setDragging(true), [])
+  useEffect(() => {
+    if (!dragging) return
+    const mm = (e: MouseEvent) => setSidebarWidth(Math.max(200, Math.min(480, e.clientX)))
+    const mu = () => setDragging(false)
+    document.addEventListener('mousemove', mm)
+    document.addEventListener('mouseup', mu)
+    return () => { document.removeEventListener('mousemove', mm); document.removeEventListener('mouseup', mu) }
+  }, [dragging])
+
+  const isContentPage = ['graph', 'exercises'].includes(urlSubPath)
+
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      {/* Header */}
-      <Header
-        style={{
-          height: 48,
-          background: '#fff',
-          borderBottom: '0.5px solid var(--color-border)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 16px',
-        }}
-      >
-        <span
-          style={{ fontSize: 20, fontWeight: 700, cursor: 'pointer' }}
-          onClick={() => navigate('/student/dashboard')}
-        >
-          KG-Class
-        </span>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Badge count={3} size="small">
-            <BellOutlined style={{ fontSize: 18, cursor: 'pointer' }} />
+      <Header style={{
+        height: 36, background: '#fff',
+        borderBottom: '0.5px solid var(--color-border)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 12px',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Button type="text" icon={<MenuOutlined />}
+            onClick={() => setDrawerOpen(true)}
+            style={{ width: 32, height: 32, padding: 0 }} />
+          <span style={{ fontSize: 16, fontWeight: 700, cursor: 'pointer' }}
+            onClick={() => navigate('/student/dashboard')}>KG-Class</span>
+        </div>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 2,
+          padding: '0 4px', background: '#FAFAFA',
+          border: '0.5px solid var(--color-border)', borderRadius: 6,
+        }}>
+          <Badge count={3} size="small" style={{ lineHeight: 1 }}>
+            <Button type="text" size="small" icon={<BellOutlined />}
+              style={{ height: 28, color: 'var(--color-text)' }} />
           </Badge>
-          <Dropdown
-            menu={{
-              items: [
-                { key: 'settings', icon: <SettingOutlined />, label: '个人设置' },
-                { type: 'divider' },
-                { key: 'logout', icon: <LogoutOutlined />, label: '退出登录', danger: true },
-              ],
-              onClick: ({ key }) => {
-                if (key === 'settings') navigate('/student/settings')
-                if (key === 'logout') navigate('/login')
-              },
-            }}
-          >
-            <Avatar
-              size={28}
-              icon={<UserOutlined />}
-              style={{ cursor: 'pointer', backgroundColor: 'var(--color-primary)' }}
-            />
+          <Dropdown menu={{
+            items: [
+              { key: 'settings', icon: <SettingOutlined />, label: '个人设置' },
+              { type: 'divider' },
+              { key: 'logout', icon: <LogoutOutlined />, label: '退出登录', danger: true },
+            ],
+            onClick: ({ key }) => {
+              if (key === 'settings') navigate('/student/settings')
+              if (key === 'logout') navigate('/login')
+            },
+          }}>
+            <Avatar size={22} icon={<UserOutlined />}
+              style={{ cursor: 'pointer', backgroundColor: 'var(--color-primary)', marginLeft: 4 }} />
           </Dropdown>
         </div>
       </Header>
 
-      <Layout>
-        <Sider
-          width={240}
-          style={{
-            background: 'var(--color-bg)',
-            borderRight: '0.5px solid var(--color-border)',
-          }}
-        >
-          <div style={{ padding: '12px 0' }}>
-            <Menu
-              mode="inline"
-              selectedKeys={[urlSubPath]}
-              onClick={onMenuClick}
-              items={studentMenuItems}
-              style={{ background: 'transparent', borderInlineEnd: 'none' }}
-            />
-          </div>
-        </Sider>
+      <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)}
+        width={320} closable={false} styles={{ body: { padding: 0 } }}>
+        <div style={{ padding: '12px 0' }}>
+          <div style={{ padding: '8px 20px 16px', fontSize: 18, fontWeight: 700 }}>KG-Class</div>
+          <Menu mode="inline" selectedKeys={[urlSubPath]} onClick={onMenuClick}
+            items={studentMenuItems}
+            style={{ background: 'transparent', borderInlineEnd: 'none', padding: '0 8px' }} />
+        </div>
+      </Drawer>
 
-        <Content style={{ padding: 24, background: 'var(--color-bg)' }}>
-          <div style={{ maxWidth: 1280, margin: '0 auto' }}>
-            <Outlet />
+      <Layout>
+        <Content style={{ display: 'flex', background: 'var(--color-bg)' }}>
+          {isContentPage && (
+            <>
+              <div style={{
+                width: sidebarWidth, flexShrink: 0, background: '#fff',
+                borderRight: '0.5px solid var(--color-border)',
+                overflow: 'auto', padding: 12,
+                transition: dragging ? 'none' : 'width 0.1s',
+              }}>
+                <div style={{ color: 'var(--color-text-tertiary)', fontSize: 13, padding: 8 }}>侧边内容区</div>
+              </div>
+              <div onMouseDown={handleMouseDown} style={{
+                width: 4, cursor: 'col-resize', flexShrink: 0,
+                background: dragging ? 'var(--color-primary)' : 'transparent',
+                transition: 'background 0.15s',
+              }}
+                onMouseEnter={(e) => { if (!dragging) e.currentTarget.style.background = 'var(--color-primary)' }}
+                onMouseLeave={(e) => { if (!dragging) e.currentTarget.style.background = 'transparent' }}
+              />
+            </>
+          )}
+          <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
+            <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+              <Outlet />
+            </div>
           </div>
         </Content>
       </Layout>
@@ -1136,16 +1152,19 @@ export default StudentLayout
 ### 验证
 
 `npm run dev`，访问 `/teacher/dashboard`。应该看到：
-- 顶部 48px 白色 Header，左侧 "KG-Class" 文字
-- 左侧 240px 侧边栏，菜单项可点击跳转
-- "审核工作台" 菜单项旁有红色数字角标 "5"
-- 右侧内容区渲染占位文字
+- 顶部 36px Header，左侧汉堡按钮 ☰ + "KG-Class"
+- 点击 ☰ 打开 320px 侧滑 Drawer，菜单项带圆角选中高亮
+- 右侧按钮组在圆角矩形框中
+- "审核工作台"旁红色数字角标
+
+访问 `/teacher/courses/course-1/graph`，应看到左侧出现可拖拽宽度的内容侧边栏（含拖拽手柄）。
 
 ### 注意事项
 
-- **`variant="borderless"`** 是 Ant Design 5 的 Select 属性，去掉输入框的边框，让课程选择器看起来就像一段可点击的文字，GitHub 风格。
-- **分割线**没有用 `<Divider>` 组件，而是用普通 `<div>` + 背景色。因为 AntD Divider 有默认的上下 margin 和复杂样式，用 div 更可控。
-- Sidebar 中的菜单点击跳转用了 if-else 判断，这是为了让你看清楚逻辑。熟练后可以改为配置驱动的跳转映射表。
+- **Drawer 的 `closable={false}`** 去掉默认的 X 关闭按钮，靠点击菜单项或点击遮罩关闭，和 GitHub 一致。
+- **高亮框比 Drawer 窄：`padding: '0 8px'`** 给 Menu 加上左右 padding，AntD inline 菜单的选中背景会自动收窄，形成圆角矩形效果。
+- **拖拽手柄**用 `onMouseDown` 触发拖拽，`useEffect` 绑定全局 `mousemove`/`mouseup`。宽度限制 200-480px。hover 手柄时显示紫色提示线。
+- **`isCoursePage`** / **`isContentPage`** 控制内容侧边栏是否显示。非课程页（仪表盘、审核台等）全宽展示。
 
 ---
 
@@ -1153,7 +1172,7 @@ export default StudentLayout
 
 ### 目的
 
-实现完整的登录页 UI（暂不接后端认证），让项目有一个正式的入口。
+实现完整的登录页 UI（暂不接后端认证），支持三种登录模式：密码登录 / 手机验证码登录 / 邮箱验证码登录。
 
 ### 设计稿参考
 
@@ -1161,203 +1180,285 @@ export default StudentLayout
 ┌─────────────────────────────────────────────────────────┐
 │                                                          │
 │                       [Logo 图标]                        │
-│                                                          │
-│                   KG-Class                              │
-│            班级共建式知识图谱教学系统                       │
+│                      登录                                │
 │                                                          │
 │            ┌──────────────────────────┐                  │
-│            │  账号（学号/工号）          │                 │
+│            │  学号 / 工号              │                  │
 │            ├──────────────────────────┤                  │
-│            │  密码                     │                 │
+│            │  密码          Forgot... │                  │
+│            │  ●●●●●●                  │                  │
 │            ├──────────────────────────┤                  │
-│            │        登  录             │  ← 紫色按钮      │
+│            │  登录身份   [学生 ▼]      │                  │
+│            ├──────────────────────────┤                  │
+│            │        登  录             │  ← 主色按钮      │
 │            └──────────────────────────┘                  │
+│                      ——— or ———                          │
+│            [手机号登录]   [邮箱登录]    ← 白底边框按钮     │
 │                                                          │
-│              教师登录  |  学生登录                        │
-│                                                          │
+│              没有账号? 注册账号 >>                         │
 └─────────────────────────────────────────────────────────┘
 ```
+
+### 前置说明：账号体系
+
+注册时手机号强制绑定、邮箱可选绑定。三种登录方式：
+- **密码登录**：学号/工号 + 密码 + 选择身份（学生/教师）
+- **手机验证码登录**：手机号 + 验证码 + 选择身份
+- **邮箱验证码登录**：邮箱 + 验证码 + 选择身份
 
 ### 代码：`src/pages/login/index.tsx`
 
 ```tsx
-// src/pages/login/index.tsx
 // 登录页
+// 支持三种登录模式：密码登录 / 手机验证码登录 / 邮箱验证码登录
 
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Button, Input, Form, message, Radio } from 'antd'
-import { UserOutlined, LockOutlined } from '@ant-design/icons'
+import { Button, Input, Form, message, Typography, Divider, Select } from 'antd'
+import { MobileOutlined, MailOutlined } from '@ant-design/icons'
 
-/*
-  Form.Item 的 rules 用于表单校验
-  message 是 AntD 的轻量级消息提示（顶部弹出）
-*/
+const { Link } = Typography
+
+type LoginMode = 'password' | 'phone' | 'email'
 
 const LoginPage = () => {
   const navigate = useNavigate()
-  // role: 'teacher' 或 'student'，决定登录后跳转到哪个端
-  const [role, setRole] = useState<'teacher' | 'student'>('student')
   const [loading, setLoading] = useState(false)
+  const [form] = Form.useForm()
+  const [loginMode, setLoginMode] = useState<LoginMode>('password')
 
-  /*
-    提交表单时的处理函数
-    目前是模拟登录：1.5 秒后跳转
-    后续只需把这段替换为真实的 API 调用
-  */
-  const onFinish = async (values: { username: string; password: string }) => {
-    setLoading(true)
+  // 验证码倒计时
+  const [codeSending, setCodeSending] = useState(false)
+  const [countdown, setCountdown] = useState(0)
 
-    // TODO: 替换为真实 API 调用
-    // const res = await axios.post('/api/auth/login', { ...values, role })
-
-    // 模拟登录延迟（让用户看到按钮 loading 状态）
-    await new Promise(resolve => setTimeout(resolve, 1500))
-
-    message.success(`欢迎回来，${values.username}`)
-    setLoading(false)
-
-    // 根据角色跳转
-    if (role === 'teacher') {
-      navigate('/teacher/dashboard')
-    } else {
-      navigate('/student/dashboard')
+  const handleSendCode = async () => {
+    const field = loginMode === 'phone' ? 'phone' : 'email'
+    try {
+      await form.validateFields([field])
+    } catch {
+      return
     }
+    setCodeSending(true)
+    await new Promise((r) => setTimeout(r, 800))
+    setCodeSending(false)
+    message.success('验证码已发送')
+    setCountdown(60)
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) { clearInterval(timer); return 0 }
+        return prev - 1
+      })
+    }, 1000)
+  }
+
+  const onFinish = async (values: any) => {
+    setLoading(true)
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+    message.success(`欢迎回来`)
+    setLoading(false)
+    const role = values.role || 'student'
+    navigate(role === 'teacher' ? '/teacher/dashboard' : '/student/dashboard')
+  }
+
+  // 切换到验证码登录模式
+  const switchToCodeMode = (mode: 'phone' | 'email') => {
+    setLoginMode(mode)
+    form.resetFields(['username', 'password', 'phoneCode', 'emailCode', 'phone', 'email'])
   }
 
   return (
     <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'var(--color-bg)',
+      minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: '#FFFFFF',
     }}>
-      {/* 登录卡片 */}
-      <div style={{
-        width: 400,
-        padding: '40px 32px',
-        background: '#fff',
-        borderRadius: 'var(--radius-lg)',
-        border: '0.5px solid var(--color-border)',
-        // ● 极淡的阴影，GitHub 风格
-        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-      }}>
-        {/* ── Logo 区域 ── */}
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          {/* 图标占位：后续替换为真实 Logo SVG */}
+      <div style={{ width: '100%', maxWidth: 380, padding: '0 16px', transform: 'translateY(-200px)' }}>
+        {/* Logo */}
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <div style={{
-            width: 56,
-            height: 56,
-            background: 'var(--color-primary)',
-            borderRadius: 12,
-            margin: '0 auto 16px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#fff',
-            fontSize: 28,
-            fontWeight: 700,
-          }}>
-            KG
-          </div>
-
-          <h1 style={{
-            fontSize: 'var(--text-xl)',
-            fontWeight: 600,
-            color: 'var(--color-text)',
-            marginBottom: 4,
-          }}>
-            KG-Class
-          </h1>
-          <p style={{
-            fontSize: 'var(--text-xs)',
-            color: 'var(--color-text-tertiary)',
-          }}>
-            班级共建式知识图谱教学系统
-          </p>
+            width: 56, height: 56, background: '#956BF5', borderRadius: 12, margin: '0 auto',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: '#fff', fontSize: 28, fontWeight: 700,
+          }}>KG</div>
         </div>
 
-        {/* ── 表单 ── */}
-        <Form
-          onFinish={onFinish}
-          size="large"           // 输入框和按钮都变大
-          autoComplete="off"
-        >
-          {/* 账号输入框 */}
-          <Form.Item
-            name="username"
-            rules={[
-              { required: true, message: '请输入账号' },
-              { min: 3, message: '账号至少 3 位' },
-            ]}
-          >
-            <Input
-              prefix={<UserOutlined style={{ color: 'var(--color-text-tertiary)' }} />}
-              placeholder="学号 / 工号"
-            />
-          </Form.Item>
+        <h2 style={{ textAlign: 'center', fontSize: 24, fontWeight: 400, color: '#2C2C2C', marginBottom: 24, marginTop: 0 }}>
+          登录
+        </h2>
 
-          {/* 密码输入框 */}
-          <Form.Item
-            name="password"
-            rules={[
-              { required: true, message: '请输入密码' },
-              { min: 6, message: '密码至少 6 位' },
-            ]}
-          >
-            <Input.Password
-              prefix={<LockOutlined style={{ color: 'var(--color-text-tertiary)' }} />}
-              placeholder="密码"
-            />
-          </Form.Item>
+        <Form form={form} onFinish={onFinish} layout="vertical"
+          initialValues={{ role: 'student' }}>
 
-          {/* 角色切换 */}
-          <Form.Item style={{ marginBottom: 24 }}>
-            <Radio.Group
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              style={{ width: '100%', textAlign: 'center' }}
-            >
-              <Radio.Button value="student" style={{ width: '50%', textAlign: 'center' }}>
-                学生登录
-              </Radio.Button>
-              <Radio.Button value="teacher" style={{ width: '50%', textAlign: 'center' }}>
-                教师登录
-              </Radio.Button>
-            </Radio.Group>
-          </Form.Item>
+          {/* ── 密码登录模式 ── */}
+          {loginMode === 'password' && (
+            <>
+              <Form.Item
+                label={<span style={{ fontWeight: 400, color: '#2C2C2C' }}>学号 / 工号</span>}
+                name="username"
+                rules={[{ required: true, message: '请输入学号或工号' }]}
+              >
+                <Input placeholder="请输入学号或工号" style={{ height: 42 }} />
+              </Form.Item>
 
-          {/* 登录按钮 — 整页唯一紫色填充按钮 */}
-          <Form.Item style={{ marginBottom: 16 }}>
-            <Button
-              type="primary"
-              htmlType="submit"
-              loading={loading}
-              block             // ● 宽度撑满
-              style={{ height: 42, fontSize: 16 }}
-            >
-              登 录
-            </Button>
-          </Form.Item>
+              <Form.Item
+                label={
+                  <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                    <span style={{ fontWeight: 400, color: '#2C2C2C' }}>密码</span>
+                    <Link onClick={(e) => { e.preventDefault(); navigate('/forgot-password') }}>
+                      Forgot password?
+                    </Link>
+                  </div>
+                }
+                name="password"
+                rules={[{ required: true, message: '请输入密码' }]}
+              >
+                <Input.Password placeholder="请输入密码" style={{ height: 42 }} />
+              </Form.Item>
 
-          {/* 底部辅助链接 */}
-          <div style={{
-            textAlign: 'center',
-            fontSize: 'var(--text-xs)',
-            color: 'var(--color-text-tertiary)',
-          }}>
-            <span>还没有账号？</span>
-            <a
-              href="#"
-              style={{
-                color: 'var(--color-primary)',
-                marginLeft: 4,
-              }}
-              onClick={(e) => { e.preventDefault(); message.info('请联系教师创建账号') }}
-            >
-              联系管理员
-            </a>
+              <Form.Item
+                label={<span style={{ fontWeight: 400, color: '#2C2C2C' }}>登录身份</span>}
+                name="role"
+              >
+                <Select style={{ height: 42 }} options={[
+                  { value: 'student', label: '学生' },
+                  { value: 'teacher', label: '教师' },
+                ]} />
+              </Form.Item>
+
+              <Form.Item>
+                <Button type="primary" htmlType="submit" loading={loading} block
+                  style={{ height: 42, fontSize: 16, fontWeight: 400 }}>
+                  登录
+                </Button>
+              </Form.Item>
+            </>
+          )}
+
+          {/* ── 手机验证码登录模式 ── */}
+          {loginMode === 'phone' && (
+            <>
+              <p style={{ fontSize: 13, color: '#6B6B6B', marginBottom: 16, textAlign: 'center' }}>
+                输入注册时绑定的手机号，接收验证码后登录
+              </p>
+              <Form.Item
+                label={<span style={{ fontWeight: 400, color: '#2C2C2C' }}>手机号</span>}
+                name="phone"
+                rules={[
+                  { required: true, message: '请输入手机号' },
+                  { pattern: /^1\d{10}$/, message: '请输入正确的手机号' },
+                ]}
+              >
+                <Input placeholder="请输入手机号" style={{ height: 42 }} />
+              </Form.Item>
+              <Form.Item
+                label={<span style={{ fontWeight: 400, color: '#2C2C2C' }}>验证码</span>}
+                name="phoneCode"
+                rules={[{ required: true, message: '请输入验证码' }]}
+              >
+                <Input placeholder="请输入验证码" style={{ height: 42 }}
+                  suffix={
+                    <Link onClick={(e) => { e.preventDefault(); handleSendCode() }}
+                      disabled={countdown > 0 || codeSending}
+                      style={{ fontSize: 14, whiteSpace: 'nowrap' }}>
+                      {countdown > 0 ? `${countdown}s` : codeSending ? '发送中...' : '获取验证码'}
+                    </Link>
+                  }
+                />
+              </Form.Item>
+              <Form.Item
+                label={<span style={{ fontWeight: 400, color: '#2C2C2C' }}>登录身份</span>}
+                name="role"
+              >
+                <Select style={{ height: 42 }} options={[
+                  { value: 'student', label: '学生' },
+                  { value: 'teacher', label: '教师' },
+                ]} />
+              </Form.Item>
+              <Form.Item>
+                <Button type="primary" htmlType="submit" loading={loading} block
+                  style={{ height: 42, fontSize: 16, fontWeight: 400 }}>
+                  登录
+                </Button>
+              </Form.Item>
+              <div style={{ textAlign: 'center', marginBottom: 16 }}>
+                <Link onClick={() => switchToCodeMode('password')}>
+                  使用密码登录
+                </Link>
+              </div>
+            </>
+          )}
+
+          {/* ── 邮箱验证码登录模式（与手机模式结构相同，字段改为 email） ── */}
+          {loginMode === 'email' && (
+            <>
+              <p style={{ fontSize: 13, color: '#6B6B6B', marginBottom: 16, textAlign: 'center' }}>
+                输入注册时绑定的邮箱，接收验证码后登录
+              </p>
+              <Form.Item
+                label={<span style={{ fontWeight: 400, color: '#2C2C2C' }}>邮箱</span>}
+                name="email"
+                rules={[
+                  { required: true, message: '请输入邮箱' },
+                  { type: 'email', message: '请输入正确的邮箱格式' },
+                ]}
+              >
+                <Input placeholder="请输入邮箱" style={{ height: 42 }} />
+              </Form.Item>
+              <Form.Item
+                label={<span style={{ fontWeight: 400, color: '#2C2C2C' }}>验证码</span>}
+                name="emailCode"
+                rules={[{ required: true, message: '请输入验证码' }]}
+              >
+                <Input placeholder="请输入验证码" style={{ height: 42 }}
+                  suffix={
+                    <Link onClick={(e) => { e.preventDefault(); handleSendCode() }}
+                      disabled={countdown > 0 || codeSending}
+                      style={{ fontSize: 14, whiteSpace: 'nowrap' }}>
+                      {countdown > 0 ? `${countdown}s` : codeSending ? '发送中...' : '获取验证码'}
+                    </Link>
+                  }
+                />
+              </Form.Item>
+              <Form.Item
+                label={<span style={{ fontWeight: 400, color: '#2C2C2C' }}>登录身份</span>}
+                name="role"
+              >
+                <Select style={{ height: 42 }} options={[
+                  { value: 'student', label: '学生' },
+                  { value: 'teacher', label: '教师' },
+                ]} />
+              </Form.Item>
+              <Form.Item>
+                <Button type="primary" htmlType="submit" loading={loading} block
+                  style={{ height: 42, fontSize: 16, fontWeight: 400 }}>
+                  登录
+                </Button>
+              </Form.Item>
+              <div style={{ textAlign: 'center', marginBottom: 16 }}>
+                <Link onClick={() => switchToCodeMode('password')}>
+                  使用密码登录
+                </Link>
+              </div>
+            </>
+          )}
+
+          {/* 密码模式才显示 or 和手机/邮箱按钮 */}
+          {loginMode === 'password' && (
+            <>
+              <Divider plain style={{ fontSize: 14, color: '#999', margin: '0 0 16px 0' }}>or</Divider>
+              <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
+                <Button block icon={<MobileOutlined />} style={{ fontWeight: 400, height: 42 }}
+                  onClick={() => switchToCodeMode('phone')}>手机号登录</Button>
+                <Button block icon={<MailOutlined />} style={{ fontWeight: 400, height: 42 }}
+                  onClick={() => switchToCodeMode('email')}>邮箱登录</Button>
+              </div>
+            </>
+          )}
+
+          <div style={{ textAlign: 'center', fontSize: 14, color: '#6B6B6B' }}>
+            没有账号?
+            <Link onClick={() => navigate('/register')} style={{ marginLeft: 4 }}>
+              注册账号 &gt;&gt;
+            </Link>
           </div>
         </Form>
       </div>
@@ -1370,22 +1471,32 @@ export default LoginPage
 
 ### 验证
 
-访问 `http://localhost:5173/login`，输入任意账号密码，点击登录。应该看到：
-- 输入框有校验（空值提交会提示）
-- 点击登录后按钮显示 loading 动画
-- 1.5 秒后弹出绿色提示，跳转到对应端的仪表盘
+访问 `http://localhost:5173/login`：
+- 密码登录模式：输入学号/工号 + 密码 + 选择身份 → 登录
+- 点击"手机号登录" → 切换到手机验证码模式（输入手机号 + 获取验证码）
+- 点击"邮箱登录" → 切换到邮箱验证码模式
+- 点击"Forgot password?" → 跳转 `/forgot-password`
+- 点击"注册账号 >>" → 跳转 `/register`
 
 ### 注意事项
 
-- **Radio.Group** 用 `Radio.Button` 而非 `Radio`，因为 `Radio.Button` 渲染成按钮组样式，视觉上像 GitHub 的 tab 切换，比圆形单选框更合适。
-- **`Form.Item` 的 `rules`** 是 AntD 内置的表单校验，`required: true` 会自动在提交时检查，不需要手动写校验逻辑。
-- 紫色只在两个地方出现：Logo 背景块和登录按钮。其他文字、输入框、边框全部用中性色。
+- **`loginMode` 状态控制三种模式的表单切换**。切换模式时用 `form.resetFields()` 清掉前一个模式的数据，避免校验冲突。
+- **验证码倒计时**用 `setInterval` 实现 60 秒递减，`disabled={countdown > 0}` 防止重复点击。
+- **身份选择用 Select 而非 Radio**：学生/教师只有两个选项，Select 的下拉更紧凑，不占额外宽度。
 
 ---
 
 ## 下一步预告
 
 第 8 步将实现**教师端仪表盘**（含按课程拆分的待审核卡片 + 课程卡片列表），第 10 步将集成 **AntV G6** 实现图谱画布。
+
+### 注册页与忘记密码页
+
+注册页（`/register`）和忘记密码页（`/forgot-password`）的代码已直接写入实际文件，参考 `frontend/src/pages/register/index.tsx` 和 `frontend/src/pages/forgot-password/index.tsx`。核心要点：
+
+- **注册页**：学号/工号 + 姓名 + 身份选择 + 手机号(必填) + 手机验证码 + 邮箱(选填) + 邮箱验证码 + 密码 + 确认密码
+- **忘记密码页**：两步流程 — 验证身份（手机号+验证码）→ 设置新密码
+- 验证码通过 `setInterval` 实现 60 秒倒计时，`disabled` 控制按钮状态
 
 每完成一步后运行 `npm run dev` 确认无报错，再进入下一步。
 
@@ -5582,6 +5693,8 @@ src/
 │       └── AIPanel.tsx             ← AI 对话面板
 ├── pages/
 │   ├── login/                      ← P0
+│   ├── register/                   ← 注册页
+│   ├── forgot-password/            ← 找回密码页
 │   ├── teacher/
 │   │   ├── dashboard/              ← P1
 │   │   ├── create-course/          ← P2
@@ -5614,9 +5727,9 @@ src/
 
 | 步骤 | 覆盖页面 | 关键技术点 |
 |------|---------|-----------|
-| 1-7 | 基础架构 | Vite、CSS 变量、AntD 主题、路由、布局壳、登录页 |
+| 1-7 | 基础架构 | Vite、CSS 变量、AntD 主题、路由、汉堡菜单 Drawer 布局壳、登录/注册/忘记密码 |
 | 8-9 | 仪表盘 | 待审核卡片按课程拆分、PR 状态列表、Progress 组件 |
-| 10 | G6 图谱 | force 布局、hover-activate、state 机制、destroy 生命周期 |
+| 10 | G6 图谱 | force 布局、hover-activate、state 机制、destroy 生命周期。**树状列表放入内容侧边栏（布局壳提供）** |
 | 11 | 新建课程 | Steps 向导、Dragger 上传、模拟 AI 生成进度 |
 | 12 | 审核工作台 | PR 卡片筛选、Drawer 详情、AI 报告展示、批量操作 |
 | 13 | PR 详情 | 时间轴、ConflictPanel 复用、新建/查看双变体 |

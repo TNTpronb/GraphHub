@@ -1,22 +1,134 @@
-// 学生端布局壳（占位）
-// 后续会替换为真实的 Header + Sidebar + Outlet
-import { Outlet } from 'react-router-dom'
+// 学生端布局壳
+
+import { useState, useRef, useCallback, useEffect } from 'react'
+import { Outlet, useNavigate, useLocation } from 'react-router-dom'
+import { Layout, Menu, Badge, Avatar, Dropdown, Drawer } from 'antd'
+import {
+  MenuOutlined, BellOutlined, UserOutlined,
+  SettingOutlined, LogoutOutlined,
+} from '@ant-design/icons'
+import type { MenuProps } from 'antd'
+import { studentMenuItems } from './sidebarConfig'
+
+const { Header, Content } = Layout
 
 const StudentLayout = () => {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [sidebarWidth, setSidebarWidth] = useState(280)
+  const [dragging, setDragging] = useState(false)
+
+  const pathParts = location.pathname.split('/')
+  const menuKeyToPath: Record<string, string> = {
+    dashboard: '/student/dashboard',
+    browse:    '/student/courses/browse',
+    graph:     `/student/courses/${pathParts[3] === 'courses' ? pathParts[4] : ''}/graph`,
+    exercises: `/student/courses/${pathParts[3] === 'courses' ? pathParts[4] : ''}/exercises`,
+    contributions: '/student/contributions',
+    settings:  '/student/settings',
+  }
+  const urlSubPath = pathParts[3] || pathParts[2] || 'dashboard'
+
+  const onMenuClick: MenuProps['onClick'] = ({ key }) => {
+    setDrawerOpen(false)
+    navigate(menuKeyToPath[key] || '/student/dashboard')
+  }
+
+  const handleMouseDown = useCallback(() => setDragging(true), [])
+  useEffect(() => {
+    if (!dragging) return
+    const mm = (e: MouseEvent) => setSidebarWidth(Math.max(200, Math.min(480, e.clientX)))
+    const mu = () => setDragging(false)
+    document.addEventListener('mousemove', mm)
+    document.addEventListener('mouseup', mu)
+    return () => { document.removeEventListener('mousemove', mm); document.removeEventListener('mouseup', mu) }
+  }, [dragging])
+
+  const isContentPage = ['graph', 'exercises'].includes(urlSubPath)
+
+  const iconBtnStyle: React.CSSProperties = {
+    width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center',
+    background: '#FAFAFA', border: '0.5px solid var(--color-border)', borderRadius: 6, cursor: 'pointer',
+  }
+
   return (
-    <div>
-      <div style={{ height: 48, background: '#fff', borderBottom: '1px solid #eee', padding: '0 16px', lineHeight: '48px' }}>
-        学生端 Header（占位）
-      </div>
-      <div style={{ display: 'flex', minHeight: 'calc(100vh - 48px)' }}>
-        <div style={{ width: 240, background: '#fafafa', padding: 16, borderRight: '1px solid #eee' }}>
-          侧边栏（占位）
+    <Layout style={{ minHeight: '100vh' }}>
+      {/* ── Header 64px ── */}
+      <Header style={{
+        height: 64, background: '#f9f7fb', borderBottom: '0.5px solid var(--color-border)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 12px',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={iconBtnStyle} onClick={() => setDrawerOpen(true)}>
+            <MenuOutlined style={{ fontSize: 16, color: 'var(--color-text)' }} />
+          </div>
+          <span style={{ fontSize: 16, fontWeight: 700, cursor: 'pointer' }} onClick={() => navigate('/student/dashboard')}>
+            KG-Class
+          </span>
         </div>
-        <div style={{ flex: 1, padding: 24 }}>
-          <Outlet /> {/* 子路由内容会在这里渲染 */}
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Badge count={3} size="small" offset={[-4, 4]}>
+            <div style={iconBtnStyle}>
+              <BellOutlined style={{ fontSize: 16, color: 'var(--color-text)' }} />
+            </div>
+          </Badge>
+          <Dropdown menu={{
+            items: [
+              { key: 'settings', icon: <SettingOutlined />, label: '个人设置' },
+              { type: 'divider' },
+              { key: 'logout', icon: <LogoutOutlined />, label: '退出登录', danger: true },
+            ],
+            onClick: ({ key }) => {
+              if (key === 'settings') navigate('/student/settings')
+              if (key === 'logout') navigate('/login')
+            },
+          }}>
+            <Avatar size={22} icon={<UserOutlined />}
+              style={{ cursor: 'pointer', backgroundColor: 'var(--color-primary)', marginLeft: 2 }} />
+          </Dropdown>
         </div>
-      </div>
-    </div>
+      </Header>
+
+      {/* ── 侧滑 Drawer（从左边滑出） ── */}
+      <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)}
+        width={320} placement="left" closable={false}
+        styles={{ wrapper: { borderRadius: '0 12px 12px 0', overflow: 'hidden' }, body: { padding: 0 } }}>
+        <div style={{ padding: '12px 0' }}>
+          <div style={{ padding: '8px 20px 16px', fontSize: 18, fontWeight: 700 }}>KG-Class</div>
+          <Menu mode="inline" selectedKeys={[urlSubPath]} onClick={onMenuClick}
+            items={studentMenuItems}
+            style={{ background: 'transparent', borderInlineEnd: 'none', padding: '0 8px' }} />
+        </div>
+      </Drawer>
+
+      <Layout>
+        <Content style={{ display: 'flex', background: 'var(--color-bg)' }}>
+          {isContentPage && (
+            <>
+              <div style={{
+                width: sidebarWidth, flexShrink: 0, background: '#fff',
+                borderRight: '0.5px solid var(--color-border)', overflow: 'auto', padding: 12,
+                transition: dragging ? 'none' : 'width 0.1s',
+              }}>
+                <div style={{ color: 'var(--color-text-tertiary)', fontSize: 13, padding: 8 }}>侧边内容区</div>
+              </div>
+              <div onMouseDown={handleMouseDown} style={{
+                width: 4, cursor: 'col-resize', flexShrink: 0,
+                background: dragging ? 'var(--color-primary)' : 'transparent', transition: 'background 0.15s',
+              }} onMouseEnter={e => { if (!dragging) e.currentTarget.style.background = 'var(--color-primary)' }}
+                onMouseLeave={e => { if (!dragging) e.currentTarget.style.background = 'transparent' }} />
+            </>
+          )}
+          <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
+            <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+              <Outlet />
+            </div>
+          </div>
+        </Content>
+      </Layout>
+    </Layout>
   )
 }
 
