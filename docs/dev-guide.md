@@ -1551,8 +1551,6 @@ export interface PendingReviewByCourse {
   courseId: string
   courseName: string
   pendingCount: number
-  // AI 平均评分趋势：'up' 上升 / 'down' 下降 / 'stable' 持平
-  aiScoreTrend: 'up' | 'down' | 'stable'
 }
 
 export interface CourseCardData {
@@ -1570,19 +1568,16 @@ export const mockPendingReviews: PendingReviewByCourse[] = [
     courseId: 'course-1',
     courseName: '数据结构',
     pendingCount: 5,
-    aiScoreTrend: 'down',      // AI 评分下降 → 可能需要人工重点关注
   },
   {
     courseId: 'course-2',
     courseName: '操作系统',
     pendingCount: 2,
-    aiScoreTrend: 'up',
   },
   {
     courseId: 'course-3',
     courseName: '计算机网络',
     pendingCount: 0,
-    aiScoreTrend: 'stable',
   },
 ]
 
@@ -1625,15 +1620,8 @@ export const mockCourses: CourseCardData[] = [
 
 import { useNavigate } from 'react-router-dom'
 import { Row, Col, Button, Tag } from 'antd'
-import {
-  PlusOutlined,
-  ArrowUpOutlined,
-  ArrowDownOutlined,
-  MinusOutlined,
-  RightOutlined,
-} from '@ant-design/icons'
+import { PlusOutlined, RightOutlined } from '@ant-design/icons'
 import { mockPendingReviews, mockCourses } from '../../../api/mock/dashboard'
-import type { PendingReviewByCourse } from '../../../api/mock/dashboard'
 
 /*
   页面结构：
@@ -1645,25 +1633,7 @@ import type { PendingReviewByCourse } from '../../../api/mock/dashboard'
 
 const TeacherDashboard = () => {
   const navigate = useNavigate()
-  // 教师姓名（后续从 auth store 获取）
   const teacherName = '张老师'
-
-  /*
-    AI 评分趋势图标映射
-    up    → 绿色上升箭头（好趋势）
-    down  → 红色下降箭头（需要关注）
-    stable→ 灰色横线（持平）
-  */
-  const trendIcon = (trend: PendingReviewByCourse['aiScoreTrend']) => {
-    switch (trend) {
-      case 'up':
-        return <ArrowUpOutlined style={{ color: 'var(--color-success)', fontSize: 12 }} />
-      case 'down':
-        return <ArrowDownOutlined style={{ color: 'var(--color-danger)', fontSize: 12 }} />
-      case 'stable':
-        return <MinusOutlined style={{ color: 'var(--color-text-tertiary)', fontSize: 12 }} />
-    }
-  }
 
   return (
     <div>
@@ -1753,23 +1723,6 @@ const TeacherDashboard = () => {
                       : 'var(--color-text-tertiary)',
                   }}>
                     {item.pendingCount}
-                  </span>
-                </div>
-
-                {/* AI 评分趋势 */}
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  fontSize: 'var(--text-xs)',
-                  color: 'var(--color-text-secondary)',
-                }}>
-                  <span>AI 评分趋势</span>
-                  {trendIcon(item.aiScoreTrend)}
-                  <span>
-                    {item.aiScoreTrend === 'up' && '上升'}
-                    {item.aiScoreTrend === 'down' && '下降'}
-                    {item.aiScoreTrend === 'stable' && '持平'}
                   </span>
                 </div>
               </div>
@@ -1891,7 +1844,6 @@ export default TeacherDashboard
 
 - **hover 边框变色**用 `onMouseEnter` + `onMouseLeave` 直接操作 DOM style，而不是 CSS `:hover`。原因是后续这个卡片可能被拆成独立组件，inline style 更容易和 props 联动。
 - **待审数 0 时不显红色**：`color: item.pendingCount > 0 ? 'red' : 'gray'`，0 个待审是正常状态，不该用红色制造焦虑。
-- **AI 评分趋势**的箭头方向：up（绿色）代表 AI 评分在上升 → 近期提交质量变好；down（红色）代表下降 → 需要教师多关注人工审核。
 
 ---
 
@@ -1939,7 +1891,6 @@ export interface StudentCourseCard {
   name: string
   teacherName: string
   nodeCount: number
-  masteredCount: number
   pendingPRCount: number
 }
 
@@ -1957,7 +1908,6 @@ export const mockStudentCourses: StudentCourseCard[] = [
     name: '数据结构',
     teacherName: '张老师',
     nodeCount: 186,
-    masteredCount: 134,
     pendingPRCount: 2,
   },
   {
@@ -1965,7 +1915,6 @@ export const mockStudentCourses: StudentCourseCard[] = [
     name: '操作系统',
     teacherName: '李老师',
     nodeCount: 124,
-    masteredCount: 56,
     pendingPRCount: 0,
   },
   {
@@ -1973,7 +1922,6 @@ export const mockStudentCourses: StudentCourseCard[] = [
     name: '计算机网络',
     teacherName: '王老师',
     nodeCount: 98,
-    masteredCount: 18,
     pendingPRCount: 1,
   },
 ]
