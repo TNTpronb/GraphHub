@@ -2,7 +2,7 @@
 // 点击节点跳转到图谱中对应位置，双向联动
 // 悬浮节点尾部出现 ··· 操作菜单
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import { Input, Tree, Dropdown, message, Modal } from 'antd'
 import type { DataNode } from 'antd/es/tree'
 import {
@@ -100,12 +100,29 @@ const filterTree = (nodes: DataNode[], text: string): DataNode[] => {
     .filter(Boolean) as DataNode[]
 }
 
-const TreeNodeList: React.FC = () => {
+const TreeNodeList: React.FC<{ readOnly?: boolean }> = ({ readOnly = false }) => {
   const selectedNodeId = useGraphStore((s) => s.selectedNodeId)
   const setSelectedNodeId = useGraphStore((s) => s.setSelectedNodeId)
   const openTab = useWorkspaceStore((s) => s.openTab)
   const [searchText, setSearchText] = useState('')
+  const [expandedKeys, setExpandedKeys] = useState<string[]>(['root'])
   const [deleteModal, setDeleteModal] = useState<{ nodeKey: string; title: string } | null>(null)
+
+  // 父节点映射（用于级联展开 + 标签显示）
+  const parentMap = useMemo(() => {
+    const map = new Map<string, string>()
+    mockGraphEdges
+      .filter((e) => e.data.relation === 'CONTAINS')
+      .forEach((e) => map.set(e.target, e.source))
+    return map
+  }, [])
+
+  // 节点标题映射
+  const titleMap = useMemo(() => {
+    const map = new Map<string, string>()
+    mockGraphNodes.forEach((n) => map.set(n.id, n.data.title))
+    return map
+  }, [])
 
   // 悬停操作菜单节点 key
   const [hoveredKey, setHoveredKey] = useState<string | null>(null)
@@ -125,9 +142,13 @@ const TreeNodeList: React.FC = () => {
     return nodeMap.get(key)?.data?.title || key
   }, [nodeMap])
 
-  // 操作菜单 — 文件夹和文件菜单不同
+  // 操作菜单 — 文件夹和文件菜单不同，只读时不显示操作项
   const getContextMenu = useCallback((nodeKey: string, nodeTitle: string): any => {
     const folder = isFolder(nodeKey)
+
+    if (readOnly) {
+      return { items: [] }
+    }
 
     if (folder) {
       return {
@@ -202,7 +223,8 @@ const TreeNodeList: React.FC = () => {
       return (
         <div
           style={{
-            display: 'inline-flex', alignItems: 'center', gap: 8,
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            width: '100%',
           }}
           onMouseEnter={() => setHoveredKey(nodeKey)}
           onMouseLeave={() => setHoveredKey(null)}
@@ -216,7 +238,7 @@ const TreeNodeList: React.FC = () => {
           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {title}
           </span>
-          {(isHovered || isRoot) && (
+          {(isHovered || isRoot) && !readOnly && (
             <Dropdown
               menu={getContextMenu(nodeKey, title)}
               trigger={['click']}
@@ -262,6 +284,23 @@ const TreeNodeList: React.FC = () => {
   )
 
   const rawTree = useMemo(buildTreeData, [])
+
+  // 选中节点变化时，级联展开其所有祖先文件夹
+  useEffect(() => {
+    if (!selectedNodeId) return
+    const ancestors: string[] = []
+    let current = selectedNodeId
+    while (parentMap.has(current)) {
+      const parent = parentMap.get(current)!
+      ancestors.unshift(parent)
+      current = parent
+    }
+    setExpandedKeys((prev) => {
+      const set = new Set([...prev, ...ancestors, 'root'])
+      return Array.from(set)
+    })
+  }, [selectedNodeId, parentMap])
+
   const searchFiltered = useMemo(() => filterTree(rawTree, searchText), [rawTree, searchText])
   const treeData = useMemo(() => renderNodes(searchFiltered), [searchFiltered, renderNodes])
 
@@ -300,7 +339,9 @@ const TreeNodeList: React.FC = () => {
                 setSelectedNodeId(keys[0] as string)
               }
             }}
-            defaultExpandedKeys={['root']}
+            expandedKeys={expandedKeys}
+            onExpand={(keys) => setExpandedKeys(keys as string[])}
+            blockNode
             showLine={{ showLeafIcon: false }}
             draggable
             allowDrop={({ dropNode }) => {

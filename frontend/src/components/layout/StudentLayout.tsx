@@ -115,7 +115,7 @@ const StudentLayout = () => {
             overflow: 'auto',
             transition: dragging ? 'none' : 'width 0.1s',
           }}>
-            {isContentPage ? <TreeNodeList /> : (
+            {isContentPage ?                 <TreeNodeList readOnly /> : (
               <div style={{ color: '#999', fontSize: 13, padding: 24, textAlign: 'center' }}>
                 非图谱页 · 无侧边栏内容
               </div>

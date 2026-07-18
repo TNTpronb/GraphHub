@@ -1,18 +1,18 @@
 // 学生图谱浏览页 — 工作区标签页
 
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Tabs, Button, Space } from 'antd'
 import { SearchOutlined, ForkOutlined } from '@ant-design/icons'
 import GraphCanvas from '../../../components/graph/GraphCanvas'
 import NoteDetailPanel from '../../../components/graph/NoteDetailPanel'
 import { useWorkspaceStore } from '../../../stores/workspaceStore'
+import { useGraphStore } from '../../../stores/graphStore'
 import type { WorkspaceTab } from '../../../stores/workspaceStore'
 
 const StudentGraphPage = () => {
   const navigate = useNavigate()
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
-  const { tabs, activeKey, openTab, closeTab, setActiveKey } = useWorkspaceStore()
+  const selectedNodeId = useGraphStore((s) => s.selectedNodeId)
+  const { tabs, activeKey, closeTab, setActiveKey } = useWorkspaceStore()
 
   const handleFork = () => {
     navigate('/student/private-graph/private-graph-1')
@@ -37,11 +37,7 @@ const StudentGraphPage = () => {
                 </Space>
               </div>
               <div style={{ height: 'calc(100% - 44px)' }}>
-                <GraphCanvas
-                  selectedNodeId={selectedNodeId}
-                  onNodeClick={(nodeId) => setSelectedNodeId(nodeId || null)}
-                  readOnly={true}
-                />
+                <GraphCanvas readOnly={false} />
               </div>
             </div>
             <div style={{ width: 1, background: 'var(--color-border)', margin: '0 16px', alignSelf: 'stretch' }} />
@@ -70,22 +66,24 @@ const StudentGraphPage = () => {
   }
 
   return (
-    <Tabs
-      type="editable-card"
-      activeKey={activeKey}
-      onChange={setActiveKey}
-      onEdit={handleEdit}
-      hideAdd
-      tabBarStyle={{ marginBottom: 0 }}
-      style={{ marginTop: -16 }}
-      items={tabs.map((tab) => ({
-        key: tab.key,
-        label: tab.label,
-        closable: tab.key !== 'graph',
-        children: renderTabContent(tab),
-      }))}
-      style={{ marginTop: -16 }}
-    />
+    <div>
+      <style>{`.workspace-tabs .ant-tabs-nav { width: 100% !important; }`}</style>
+      <Tabs
+        type="editable-card"
+        activeKey={activeKey}
+        onChange={setActiveKey}
+        onEdit={handleEdit}
+        hideAdd
+        tabBarStyle={{ marginBottom: 0 }}
+        className="workspace-tabs"
+        items={tabs.map((tab) => ({
+          key: tab.key,
+          label: tab.label,
+          closable: tab.key !== 'graph',
+          children: renderTabContent(tab),
+        }))}
+      />
+    </div>
   )
 }
 

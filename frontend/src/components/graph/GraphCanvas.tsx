@@ -12,6 +12,7 @@ import { Button, Popover, Switch, Slider, Collapse } from 'antd'
 import { SettingOutlined } from '@ant-design/icons'
 import { mockGraphNodes, mockGraphEdges } from '../../api/mock/graph'
 import { useGraphStore } from '../../stores/graphStore'
+import { useWorkspaceStore } from '../../stores/workspaceStore'
 
 interface GraphCanvasProps {
   selectedNodeId?: string | null
@@ -21,7 +22,7 @@ interface GraphCanvasProps {
 
 interface SimNode {
   id: string; x: number; y: number; vx: number; vy: number
-  title: string; degree: number; size: number; fill: string
+  title: string; degree: number; size: number; fill: string; isTag: boolean
 }
 interface SimEdge { source: string; target: string }
 
@@ -38,10 +39,12 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
 }) => {
   const storeSelected = useGraphStore((s) => s.selectedNodeId)
   const setSelectedNodeId = useGraphStore((s) => s.setSelectedNodeId)
+  const openTab = useWorkspaceStore((s) => s.openTab)
   const effectiveSelected = selectedNodeId !== undefined ? selectedNodeId : storeSelected
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const simRef = useRef<any>(null)
   const nodesRef = useRef<SimNode[]>([])
+  const allNodesRef = useRef<SimNode[]>([]) // 原始完整节点列表，toggle 恢复用
   const edgesRef = useRef<SimEdge[]>([])
   const hoveredRef = useRef<string | null>(null)
   const selectedRef = useRef<string | null>(effectiveSelected || null)
@@ -52,6 +55,7 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
   const dimOpacityRef = useRef(1)
   const highlightAlphaRef = useRef(0)
   const animFrameRef = useRef(0)
+  const doubleClickRef = useRef<{ nodeId: string; time: number } | null>(null)
 
   // ── 设置面板状态 ──
   const [showTags, setShowTags] = useState(true)
@@ -59,12 +63,11 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
   const [showArrows, setShowArrows] = useState(false)
   const [nodeSizeMult, setNodeSizeMult] = useState(100)
   const [edgeWidth, setEdgeWidth] = useState(100)
-  const [centerForce, setCenterForce] = useState(0.5)  // 0-10 → 0-1.0
-  const [repulsionForce, setRepulsionForce] = useState(40)  // 0-100 → -30 ~ -300
-  const [attractionForce, setAttractionForce] = useState(50)// 0-100 → 0.1-1.0
-  const [linkDistance, setLinkDistance] = useState(80)      // 像素
+  const [centerForce, setCenterForce] = useState(0.5)
+  const [repulsionForce, setRepulsionForce] = useState(40)
+  const [attractionForce, setAttractionForce] = useState(50)
+  const [linkDistance, setLinkDistance] = useState(80)
 
-  // 力度参数写入 ref，render/restart 直接读
   const forceRef = useRef({ center: 0.05, repulsion: 120, attraction: 0.5, distance: 80 })
 
   const restartSim = useCallback(() => {
@@ -109,8 +112,18 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
     const nm = nodeSizeMult / 100
     const ew = edgeWidth / 100
 
+    // 根据 showTags 过滤节点和边
+    const visibleNodeIds = new Set(
+      nodes.filter((n) => showTags || !n.isTag).map((n) => n.id)
+    )
+    const visibleEdges = edgesRef.current.filter((e) => {
+      const sid = typeof e.source === 'string' ? e.source : (e.source as any).id
+      const tid = typeof e.target === 'string' ? e.target : (e.target as any).id
+      return visibleNodeIds.has(sid) && visibleNodeIds.has(tid)
+    })
+
     // ── 边 ──
-    edgesRef.current.forEach((e) => {
+    visibleEdges.forEach((e) => {
       const sid = typeof e.source === 'string' ? e.source : (e.source as any).id
       const tid = typeof e.target === 'string' ? e.target : (e.target as any).id
       const sn = nodes.find((n) => n.id === sid)
@@ -151,6 +164,7 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
 
     // ── 节点 ──
     nodes.forEach((n) => {
+      if (!visibleNodeIds.has(n.id)) return
       const cx = n.x * s + ox, cy = n.y * s + oy, r = n.size * nm * s
       if (cx < -50 || cx > W + 50 || cy < -50 || cy > H + 50) return
       const isActive = activeNeighbors.has(n.id)
@@ -196,6 +210,12 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
     resize()
     window.addEventListener('resize', resize)
 
+    const tagNodeIds = new Set(
+      mockGraphNodes
+        .filter((n) => n.data.tags.some((t: string) => t === '#subject' || t === '#chapter'))
+        .map((n) => n.id)
+    )
+
     const nodes: SimNode[] = mockGraphNodes.map((n) => {
       const deg = degreeMap[n.id] || 1
       const g = Math.round(220 - (deg / maxDegree) * 140)
@@ -205,11 +225,13 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
         y: canvas.height / 2 + (Math.random() - 0.5) * 50,
         vx: 0, vy: 0, size: 6 + (deg / maxDegree) * 12,
         fill: `rgb(${g},${g},${g})`,
+        isTag: tagNodeIds.has(n.id),
       }
     })
 
     const edges: SimEdge[] = mockGraphEdges.map((e) => ({ source: e.source, target: e.target }))
     nodesRef.current = nodes; edgesRef.current = edges
+    allNodesRef.current = [...nodes] // 保存完整列表
 
     const avgDegree = Object.values(degreeMap).reduce((a, b) => a + b, 0) / nodes.length
     const densityFactor = Math.max(0.5, 1 - avgDegree / (maxDegree * 2))
@@ -295,7 +317,34 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
     }
 
     const onPointerUp = (e: PointerEvent) => {
-      if (draggingRef.current) { draggingRef.current = null; canvas.releasePointerCapture(e.pointerId); return }
+      if (draggingRef.current) {
+        const dragId = draggingRef.current.id
+        draggingRef.current = null
+        canvas.releasePointerCapture(e.pointerId)
+        // 没实际拖拽 → 视为 click
+        const rect = canvas.getBoundingClientRect()
+        const hit = hitTest(e.clientX - rect.left, e.clientY - rect.top)
+        if (hit && hit.id === dragId) {
+          // 双击检测
+          const now = Date.now()
+          const prev = doubleClickRef.current
+          if (prev && prev.nodeId === hit.id && now - prev.time < 400) {
+            doubleClickRef.current = null
+            const node = nodesRef.current.find((n) => n.id === hit.id)
+            if (node && !node.isTag) {
+              const title = node.title
+              openTab({ key: hit.id, label: title, type: 'editor', nodeId: hit.id })
+            }
+          } else {
+            doubleClickRef.current = { nodeId: hit.id, time: now }
+          }
+          selectedRef.current = hit.id
+          onNodeClick?.(hit.id ?? '')
+          setSelectedNodeId(hit.id ?? null)
+          startDimAnimation()
+        }
+        return
+      }
       if (panningRef.current) {
         const didPan = Math.abs(offsetRef.current.x - panningRef.current.ox) > 3
                     || Math.abs(offsetRef.current.y - panningRef.current.oy) > 3
@@ -340,7 +389,29 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  useEffect(() => { selectedRef.current = selectedNodeId || null; render() }, [selectedNodeId, render])
+  useEffect(() => {
+    selectedRef.current = storeSelected || null
+    render()
+  }, [storeSelected, render])
+
+  // 标签开关变化时重启模拟
+  useEffect(() => {
+    const sim = simRef.current
+    if (!sim) return
+    // 从原始完整列表重建
+    const filtered = allNodesRef.current.filter((n) => showTags || !n.isTag)
+    nodesRef.current = [...filtered]
+    sim.nodes(filtered as any)
+    sim.force('link', forceLink(
+      edgesRef.current.filter((e) => {
+        const sid = typeof e.source === 'string' ? e.source : (e.source as any).id
+        const tid = typeof e.target === 'string' ? e.target : (e.target as any).id
+        return filtered.some((n) => n.id === sid) && filtered.some((n) => n.id === tid)
+      }) as any
+    ).id((d: any) => d.id).distance(forceRef.current.distance).strength(forceRef.current.attraction))
+    sim.alpha(0.5).restart()
+    render()
+  }, [showTags, render])
 
   // 力度滑块变化时重启模拟
   useEffect(() => {

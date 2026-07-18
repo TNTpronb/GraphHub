@@ -1,17 +1,17 @@
 // 教师图谱管理页 — 工作区标签页
 // 默认"图谱"标签页显示网络图，双击树节点在新标签页打开编辑器
 
-import { useState } from 'react'
 import { Tabs, Button, Space } from 'antd'
 import { SearchOutlined, ExportOutlined } from '@ant-design/icons'
 import GraphCanvas from '../../../components/graph/GraphCanvas'
 import NoteDetailPanel from '../../../components/graph/NoteDetailPanel'
 import { useWorkspaceStore } from '../../../stores/workspaceStore'
+import { useGraphStore } from '../../../stores/graphStore'
 import type { WorkspaceTab } from '../../../stores/workspaceStore'
 
 const TeacherGraphPage = () => {
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
-  const { tabs, activeKey, openTab, closeTab, setActiveKey } = useWorkspaceStore()
+  const selectedNodeId = useGraphStore((s) => s.selectedNodeId)
+  const { tabs, activeKey, closeTab, setActiveKey } = useWorkspaceStore()
 
   const handleEdit = (key: React.MouseEvent | React.KeyboardEvent | string, action: 'add' | 'remove') => {
     if (action === 'remove') {
@@ -34,11 +34,7 @@ const TeacherGraphPage = () => {
                 </Space>
               </div>
               <div style={{ height: 'calc(100% - 44px)' }}>
-                <GraphCanvas
-                  selectedNodeId={selectedNodeId}
-                  onNodeClick={(nodeId) => setSelectedNodeId(nodeId || null)}
-                  readOnly={false}
-                />
+                <GraphCanvas readOnly={false} />
               </div>
             </div>
             {/* 分割线 */}
