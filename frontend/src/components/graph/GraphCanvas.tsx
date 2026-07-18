@@ -11,6 +11,7 @@ import {
 import { Button, Popover, Switch, Slider, Collapse } from 'antd'
 import { SettingOutlined } from '@ant-design/icons'
 import { mockGraphNodes, mockGraphEdges } from '../../api/mock/graph'
+import { useGraphStore } from '../../stores/graphStore'
 
 interface GraphCanvasProps {
   selectedNodeId?: string | null
@@ -35,12 +36,15 @@ const maxDegree = Math.max(...Object.values(degreeMap), 1)
 const GraphCanvas: React.FC<GraphCanvasProps> = ({
   selectedNodeId, onNodeClick, readOnly = false,
 }) => {
+  const storeSelected = useGraphStore((s) => s.selectedNodeId)
+  const setSelectedNodeId = useGraphStore((s) => s.setSelectedNodeId)
+  const effectiveSelected = selectedNodeId !== undefined ? selectedNodeId : storeSelected
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const simRef = useRef<any>(null)
   const nodesRef = useRef<SimNode[]>([])
   const edgesRef = useRef<SimEdge[]>([])
   const hoveredRef = useRef<string | null>(null)
-  const selectedRef = useRef<string | null>(selectedNodeId || null)
+  const selectedRef = useRef<string | null>(effectiveSelected || null)
   const draggingRef = useRef<{ id: string } | null>(null)
   const panningRef = useRef<{ sx: number; sy: number; ox: number; oy: number } | null>(null)
   const offsetRef = useRef({ x: 0, y: 0 })
@@ -302,6 +306,7 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
           const hit = hitTest(e.clientX - rect.left, e.clientY - rect.top)
           selectedRef.current = hit ? hit.id : null
           onNodeClick?.(hit?.id ?? '')
+          setSelectedNodeId(hit?.id ?? null)
           startDimAnimation()
         }
       }

@@ -5,11 +5,14 @@
 import ThemeProvider from './theme/ThemeProvider'
 import { RouterProvider } from 'react-router-dom'
 import router from './router'
+import { SidebarProvider } from './contexts/SidebarContext'
 
 function App() {
   return (
     <ThemeProvider>
-      <RouterProvider router={router} />
+      <SidebarProvider>
+        <RouterProvider router={router} />
+      </SidebarProvider>
     </ThemeProvider>
   )
 }
