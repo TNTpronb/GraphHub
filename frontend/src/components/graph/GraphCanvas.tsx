@@ -59,6 +59,10 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
   const panningRef = useRef<{ sx: number; sy: number; ox: number; oy: number } | null>(null)
   const offsetRef = useRef({ x: 0, y: 0 })
   const scaleRef = useRef(1)
+  // 渐变动画：dimOpacity 从 1 渐变到 0.15（非高亮节点变暗），反之亦然
+  const dimOpacityRef = useRef(1)
+  const highlightAlphaRef = useRef(0) // 高亮紫色叠加透明度：0=灰色, 1=紫色
+  const animFrameRef = useRef(0)
 
   // 获取邻居节点和关联边
   const getNeighborIds = useCallback((nodeId: string): Set<string> => {
@@ -131,8 +135,7 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
         const g = Math.round(200 - (avg / maxDegree) * 80)
         ctx.strokeStyle = `rgb(${g},${g},${g})`
         ctx.lineWidth = 1
-        // hover 或 select 时非关联边变暗
-        ctx.globalAlpha = hovered || selected ? 0.15 : 1
+        ctx.globalAlpha = isActive ? 1 : dimOpacityRef.current
       }
 
       ctx.beginPath()
@@ -154,25 +157,29 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
       const isActive = activeNeighbors.has(n.id)
       const isSel = n.id === selected
 
-      // 非活跃节点且存在 hover/select 时变暗
-      if ((hovered || selected) && !isActive) {
-        ctx.globalAlpha = 0.15
-      } else {
-        ctx.globalAlpha = 1
-      }
+      // 非活跃节点变暗（渐变值），活跃节点保持 1
+      ctx.globalAlpha = isActive ? 1 : dimOpacityRef.current
 
       ctx.beginPath()
       ctx.arc(cx, cy, r, 0, Math.PI * 2)
 
       if (isSel) {
+        // 选中态：直接紫色
         ctx.fillStyle = '#956BF5'
         ctx.fill()
         ctx.strokeStyle = '#6A3FCC'
         ctx.lineWidth = 2
         ctx.stroke()
       } else if (isActive) {
-        ctx.fillStyle = '#956BF5'
+        // 高亮态：先画灰色底，再用渐变紫色叠加在上面
+        ctx.fillStyle = n.fill
         ctx.fill()
+        ctx.globalAlpha = highlightAlphaRef.current
+        ctx.fillStyle = '#956BF5'
+        ctx.beginPath()
+        ctx.arc(cx, cy, r, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.globalAlpha = 1
       } else {
         ctx.fillStyle = n.fill
         ctx.fill()
@@ -261,6 +268,33 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
 
     simRef.current = sim
 
+    // ── 渐变动画循环 ──
+    const startDimAnimation = () => {
+      cancelAnimationFrame(animFrameRef.current)
+      const animate = () => {
+        const dimTarget = hoveredRef.current || selectedRef.current ? 0.15 : 1
+        const hlTarget = hoveredRef.current || selectedRef.current ? 1 : 0
+
+        const dimNext = dimOpacityRef.current + (dimTarget - dimOpacityRef.current) * 0.18
+        const hlNext = highlightAlphaRef.current + (hlTarget - highlightAlphaRef.current) * 0.18
+
+        const dimDone = Math.abs(dimNext - dimTarget) < 0.003
+        const hlDone = Math.abs(hlNext - hlTarget) < 0.003
+
+        dimOpacityRef.current = dimDone ? dimTarget : dimNext
+        highlightAlphaRef.current = hlDone ? hlTarget : hlNext
+
+        render()
+
+        if (dimDone && hlDone) {
+          animFrameRef.current = 0
+          return
+        }
+        animFrameRef.current = requestAnimationFrame(animate)
+      }
+      animFrameRef.current = requestAnimationFrame(animate)
+    }
+
     // ── 鼠标事件 ──
     const hitTest = (mx: number, my: number): SimNode | null => {
       const ox = offsetRef.current.x
@@ -308,7 +342,7 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
         hoveredRef.current = null
         canvas.style.cursor = 'default'
       }
-      if (prev !== hoveredRef.current) render()
+      if (prev !== hoveredRef.current) startDimAnimation()
     }
 
     const onPointerDown = (e: PointerEvent) => {
@@ -355,7 +389,7 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
             selectedRef.current = null
             onNodeClick?.('')
           }
-          render()
+          startDimAnimation()
         }
       }
     }
@@ -388,6 +422,7 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
       canvas.removeEventListener('pointerdown', onPointerDown)
       canvas.removeEventListener('pointerup', onPointerUp)
       canvas.removeEventListener('wheel', onWheel)
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current)
       sim.stop()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
