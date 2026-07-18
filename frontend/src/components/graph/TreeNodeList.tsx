@@ -26,6 +26,7 @@ import {
 } from '@ant-design/icons'
 import { mockGraphNodes, mockGraphEdges } from '../../api/mock/graph'
 import { useGraphStore } from '../../stores/graphStore'
+import { useWorkspaceStore } from '../../stores/workspaceStore'
 
 // 标签 → 图标映射
 const tagIconMap: Record<string, { icon: React.ReactNode; label: string }> = {
@@ -102,6 +103,7 @@ const filterTree = (nodes: DataNode[], text: string): DataNode[] => {
 const TreeNodeList: React.FC = () => {
   const selectedNodeId = useGraphStore((s) => s.selectedNodeId)
   const setSelectedNodeId = useGraphStore((s) => s.setSelectedNodeId)
+  const openTab = useWorkspaceStore((s) => s.openTab)
   const [searchText, setSearchText] = useState('')
   const [deleteModal, setDeleteModal] = useState<{ nodeKey: string; title: string } | null>(null)
 
@@ -207,7 +209,7 @@ const TreeNodeList: React.FC = () => {
           onDoubleClick={(e) => {
             e.stopPropagation()
             if (!isFolder(nodeKey) && nodeKey !== 'root') {
-              message.info(`打开编辑器：${title}`)
+              openTab({ key: nodeKey, label: title, type: 'editor', nodeId: nodeKey })
             }
           }}
         >

@@ -440,8 +440,7 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
       <canvas
         ref={canvasRef}
         style={{
-          width: '100%', height: '100%', minHeight: 500,
-          borderRadius: 'var(--radius-lg)', border: '0.5px solid var(--color-border)',
+          width: '100%', height: '100%',
           cursor: 'default', background: '#FAFAFA',
         }}
       />

@@ -126,8 +126,8 @@ const StudentLayout = () => {
             background: dragging ? 'var(--color-primary)' : 'transparent', transition: 'background 0.15s',
           }} onMouseEnter={e => { if (!dragging) e.currentTarget.style.background = 'var(--color-primary)' }}
             onMouseLeave={e => { if (!dragging) e.currentTarget.style.background = 'transparent' }} />
-          <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
-            <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+          <div style={{ flex: 1, overflow: 'auto', padding: isContentPage ? 0 : 24 }}>
+            <div style={isContentPage ? undefined : { maxWidth: 1280, margin: '0 auto' }}>
               <Outlet />
             </div>
           </div>
