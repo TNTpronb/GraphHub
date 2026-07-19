@@ -8,7 +8,7 @@ import { createBrowserRouter } from 'react-router-dom'
 import TeacherLayout from '../components/layout/TeacherLayout'
 import StudentLayout from '../components/layout/StudentLayout'
 
-// ── 页面（目前都是占位组件） ──
+// ── 页面 ──
 import LoginPage            from '../pages/login'
 import RegisterPage         from '../pages/register'
 import ForgotPasswordPage   from '../pages/forgot-password'
@@ -16,10 +16,17 @@ import TeacherDashboard     from '../pages/teacher/dashboard'
 import TeacherGraph         from '../pages/teacher/graph'
 import TeacherReview        from '../pages/teacher/review'
 import TeacherCreateCourse  from '../pages/teacher/create-course'
+import TeacherIssues        from '../pages/teacher/issues'
+import TeacherInfo          from '../pages/teacher/info'
+import TeacherEnrollments   from '../pages/teacher/enrollments'
 import StudentDashboard     from '../pages/student/dashboard'
 import StudentGraph         from '../pages/student/graph'
 import StudentPR            from '../pages/student/pr'
 import StudentPrivateGraph  from '../pages/student/private-graph'
+import StudentIssues        from '../pages/student/issues'
+import StudentInfo          from '../pages/student/info'
+import StudentMyPR          from '../pages/student/my-pr'
+import StudentContributions from '../pages/student/contributions'
 
 const router = createBrowserRouter([
   // ── 登录/注册/忘记密码（独立路由，无布局壳） ──
@@ -45,6 +52,13 @@ const router = createBrowserRouter([
       { path: 'dashboard', element: <TeacherDashboard /> },
       { path: 'courses/new', element: <TeacherCreateCourse /> },
       { path: 'courses/:courseId/graph', element: <TeacherGraph /> },
+      { path: 'courses/:courseId/review', element: <TeacherReview /> },
+      { path: 'courses/:courseId/enrollments', element: <TeacherEnrollments /> },
+      { path: 'courses/:courseId/issues', element: <TeacherIssues /> },
+      { path: 'courses/:courseId/info', element: <TeacherInfo /> },
+      { path: 'courses/:courseId/materials', element: <TeacherDashboard /> },
+      { path: 'courses/:courseId/exercises', element: <TeacherDashboard /> },
+      { path: 'courses/:courseId/analytics', element: <TeacherDashboard /> },
       { path: 'review', element: <TeacherReview /> },
     ],
   },
@@ -57,6 +71,11 @@ const router = createBrowserRouter([
       { index: true, element: <StudentDashboard /> },
       { path: 'dashboard', element: <StudentDashboard /> },
       { path: 'courses/:courseId/graph', element: <StudentGraph /> },
+      { path: 'courses/:courseId/my-pr', element: <StudentMyPR /> },
+      { path: 'courses/:courseId/issues', element: <StudentIssues /> },
+      { path: 'courses/:courseId/contributions', element: <StudentContributions /> },
+      { path: 'courses/:courseId/info', element: <StudentInfo /> },
+      { path: 'courses/:courseId/exercises', element: <StudentDashboard /> },
       { path: 'private-graph/:graphId', element: <StudentPrivateGraph /> },
       { path: 'pr/:prId', element: <StudentPR /> },
     ],

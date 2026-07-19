@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { Layout, Menu, Badge, Avatar, Dropdown, Drawer } from 'antd'
 import TreeNodeList from '../graph/TreeNodeList'
+import CourseToolbar from './CourseToolbar'
 import {
   MenuOutlined, BellOutlined, UserOutlined,
   SettingOutlined, LogoutOutlined,
@@ -32,6 +33,7 @@ const StudentLayout = () => {
     settings:  '/student/settings',
   }
   const urlSubPath = inCourse ? (pathParts[4] || 'graph') : (pathParts[2] || 'dashboard')
+  const urlCourseId = inCourse ? pathParts[3] : undefined
 
   const onMenuClick: MenuProps['onClick'] = ({ key }) => {
     setDrawerOpen(false)
@@ -48,7 +50,8 @@ const StudentLayout = () => {
     return () => { document.removeEventListener('mousemove', mm); document.removeEventListener('mouseup', mu) }
   }, [dragging])
 
-  const isContentPage = ['graph', 'exercises'].includes(urlSubPath)
+  const isContentPage = ['graph', 'exercises', 'my-pr', 'issues', 'contributions', 'info'].includes(urlSubPath)
+  const isGraphPage = urlSubPath === 'graph'
 
   const iconBtnStyle: React.CSSProperties = {
     width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -108,28 +111,32 @@ const StudentLayout = () => {
 
       <Layout>
         <Content style={{ display: 'flex', background: 'var(--color-bg)' }}>
-          <div style={{
-            width: sidebarWidth, flexShrink: 0, minWidth: sidebarWidth,
-            background: '#fff',
-            borderRight: '0.5px solid var(--color-border)',
-            overflow: 'auto',
-            transition: dragging ? 'none' : 'width 0.1s',
-          }}>
-            {isContentPage ?                 <TreeNodeList readOnly /> : (
-              <div style={{ color: '#999', fontSize: 13, padding: 24, textAlign: 'center' }}>
-                非图谱页 · 无侧边栏内容
+          {isContentPage && <CourseToolbar role="student" courseId={urlCourseId} />}
+          {isGraphPage && (
+            <div style={{
+              width: sidebarWidth, flexShrink: 0, background: '#fff',
+              borderRight: '0.5px solid var(--color-border)',
+              overflow: 'auto',
+              transition: dragging ? 'none' : 'width 0.1s',
+            }}>
+              <TreeNodeList readOnly />
+            </div>
+          )}
+          {isContentPage && (
+            <div onMouseDown={handleMouseDown} style={{
+              width: 4, cursor: 'col-resize', flexShrink: 0,
+              background: dragging ? 'var(--color-primary)' : 'transparent', transition: 'background 0.15s',
+            }} onMouseEnter={e => { if (!dragging) e.currentTarget.style.background = 'var(--color-primary)' }}
+              onMouseLeave={e => { if (!dragging) e.currentTarget.style.background = 'transparent' }} />
+          )}
+          <div style={{ flex: 1, overflow: 'auto', padding: isGraphPage ? 0 : 24 }}>
+            {isGraphPage ? (
+              <Outlet />
+            ) : (
+              <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+                <Outlet />
               </div>
             )}
-          </div>
-          <div onMouseDown={handleMouseDown} style={{
-            width: 4, cursor: 'col-resize', flexShrink: 0,
-            background: dragging ? 'var(--color-primary)' : 'transparent', transition: 'background 0.15s',
-          }} onMouseEnter={e => { if (!dragging) e.currentTarget.style.background = 'var(--color-primary)' }}
-            onMouseLeave={e => { if (!dragging) e.currentTarget.style.background = 'transparent' }} />
-          <div style={{ flex: 1, overflow: 'auto', padding: isContentPage ? 0 : 24 }}>
-            <div style={isContentPage ? undefined : { maxWidth: 1280, margin: '0 auto' }}>
-              <Outlet />
-            </div>
           </div>
         </Content>
       </Layout>

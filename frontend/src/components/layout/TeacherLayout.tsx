@@ -5,6 +5,7 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { Layout, Menu, Select, Badge, Avatar, Dropdown, Drawer } from 'antd'
 import TreeNodeList from '../graph/TreeNodeList'
+import CourseToolbar from './CourseToolbar'
 import {
   MenuOutlined,
   PlusOutlined,
@@ -33,16 +34,18 @@ const TeacherLayout = () => {
 
   const pathParts = location.pathname.split('/')
   // URL: /teacher/courses/course-1/graph → ['', 'teacher', 'courses', 'course-1', 'graph']
-  const urlCourseId = pathParts[2] === 'courses' ? pathParts[3] : undefined
-  const urlSubPath = urlCourseId ? (pathParts[4] || 'graph') : undefined
+  const urlCourseId = (pathParts[2] === 'courses' && pathParts[3] !== 'new')
+    ? pathParts[3]
+    : undefined
+  const urlSubPath = urlCourseId ? pathParts[4] : undefined
 
   const selectedKey = urlCourseId
-    ? urlSubPath
+    ? (urlSubPath || 'graph')
     : (pathParts[2] !== 'courses' ? pathParts[2] : undefined) || 'dashboard'
 
   const onMenuClick: MenuProps['onClick'] = ({ key }) => {
     setDrawerOpen(false)
-    if (urlCourseId && ['graph', 'materials', 'exercises', 'analytics', 'enrollments'].includes(key)) {
+    if (urlCourseId && ['graph', 'materials', 'exercises', 'analytics', 'enrollments', 'review', 'issues', 'info'].includes(key)) {
       navigate(`/teacher/courses/${urlCourseId}/${key}`)
       return
     }
@@ -67,7 +70,8 @@ const TeacherLayout = () => {
     { id: 'course-2', name: '操作系统', pendingCount: 1 },
   ]
 
-  const isCoursePage = !!urlCourseId && ['graph', 'materials', 'exercises', 'analytics', 'enrollments'].includes(urlSubPath || '')
+  const isCoursePage = !!urlCourseId && ['graph', 'materials', 'exercises', 'analytics', 'enrollments', 'review', 'issues', 'info'].includes(urlSubPath || '')
+  const isGraphPage = urlSubPath === 'graph'
 
   // 每个图标按钮共享的圆角方框样式
   const iconBtnStyle: React.CSSProperties = {
@@ -154,29 +158,32 @@ const TeacherLayout = () => {
       {/* ── 内容区 ── */}
       <Layout>
         <Content style={{ display: 'flex', background: 'var(--color-bg)' }}>
-          {/* 侧边栏：课程页显示 TreeNodeList，非课程页也显示占位（确保调试时可见） */}
-          <div style={{
-            width: sidebarWidth, flexShrink: 0, minWidth: sidebarWidth,
-            background: '#fff',
-            borderRight: '0.5px solid var(--color-border)',
-            overflow: 'auto',
-            transition: dragging ? 'none' : 'width 0.1s',
-          }}>
-            {isCoursePage ? <TreeNodeList /> : (
-              <div style={{ color: '#999', fontSize: 13, padding: 24, textAlign: 'center' }}>
-                非课程页 · 无侧边栏内容
+          {isCoursePage && <CourseToolbar role="teacher" courseId={urlCourseId} />}
+          {isGraphPage && (
+            <div style={{
+              width: sidebarWidth, flexShrink: 0, background: '#fff',
+              borderRight: '0.5px solid var(--color-border)',
+              overflow: 'auto',
+              transition: dragging ? 'none' : 'width 0.1s',
+            }}>
+              <TreeNodeList />
+            </div>
+          )}
+          {isGraphPage && (
+            <div onMouseDown={handleMouseDown} style={{
+              width: 4, cursor: 'col-resize', flexShrink: 0,
+              background: dragging ? 'var(--color-primary)' : 'transparent', transition: 'background 0.15s',
+            }} onMouseEnter={e => { if (!dragging) e.currentTarget.style.background = 'var(--color-primary)' }}
+              onMouseLeave={e => { if (!dragging) e.currentTarget.style.background = 'transparent' }} />
+          )}
+          <div style={{ flex: 1, overflow: 'auto', padding: isGraphPage ? 0 : 24 }}>
+            {isGraphPage ? (
+              <Outlet />
+            ) : (
+              <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+                <Outlet />
               </div>
             )}
-          </div>
-          <div onMouseDown={handleMouseDown} style={{
-            width: 4, cursor: 'col-resize', flexShrink: 0,
-            background: dragging ? 'var(--color-primary)' : 'transparent', transition: 'background 0.15s',
-          }} onMouseEnter={e => { if (!dragging) e.currentTarget.style.background = 'var(--color-primary)' }}
-            onMouseLeave={e => { if (!dragging) e.currentTarget.style.background = 'transparent' }} />
-          <div style={{ flex: 1, overflow: 'auto', padding: isCoursePage ? 0 : 24 }}>
-            <div style={isCoursePage ? undefined : { maxWidth: 1280, margin: '0 auto' }}>
-              <Outlet />
-            </div>
           </div>
         </Content>
       </Layout>
