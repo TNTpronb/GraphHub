@@ -70,7 +70,7 @@ const TeacherLayout = () => {
     { id: 'course-2', name: '操作系统', pendingCount: 1 },
   ]
 
-  const isCoursePage = !!urlCourseId && ['graph', 'materials', 'exercises', 'analytics', 'enrollments', 'review', 'issues', 'info'].includes(urlSubPath || '')
+  const isCoursePage = !!urlCourseId && ['graph', 'materials', 'exercises', 'analytics', 'enrollments', 'review', 'issues', 'info', 'diff'].includes(urlSubPath || '')
   const isGraphPage = urlSubPath === 'graph'
 
   // 每个图标按钮共享的圆角方框样式

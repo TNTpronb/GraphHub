@@ -19,6 +19,7 @@ import TeacherCreateCourse  from '../pages/teacher/create-course'
 import TeacherIssues        from '../pages/teacher/issues'
 import TeacherInfo          from '../pages/teacher/info'
 import TeacherEnrollments   from '../pages/teacher/enrollments'
+import TeacherDiff         from '../pages/teacher/diff'
 import StudentDashboard     from '../pages/student/dashboard'
 import StudentGraph         from '../pages/student/graph'
 import StudentPR            from '../pages/student/pr'
@@ -55,7 +56,7 @@ const router = createBrowserRouter([
       { path: 'courses/:courseId/review', element: <TeacherReview /> },
       { path: 'courses/:courseId/enrollments', element: <TeacherEnrollments /> },
       { path: 'courses/:courseId/issues', element: <TeacherIssues /> },
-      { path: 'courses/:courseId/info', element: <TeacherInfo /> },
+      { path: 'courses/:courseId/diff/:prId', element: <TeacherDiff /> },
       { path: 'courses/:courseId/materials', element: <TeacherDashboard /> },
       { path: 'courses/:courseId/exercises', element: <TeacherDashboard /> },
       { path: 'courses/:courseId/analytics', element: <TeacherDashboard /> },
