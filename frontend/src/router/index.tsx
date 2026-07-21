@@ -76,6 +76,7 @@ const router = createBrowserRouter([
       { path: 'dashboard', element: <StudentDashboard /> },
       { path: 'courses/:courseId/graph', element: <StudentGraph /> },
       { path: 'courses/:courseId/my-graphs/:versionKey', element: <StudentGraphEditor /> },
+      { path: 'courses/:courseId/pr/:prId', element: <StudentPR /> },
       { path: 'courses/:courseId/my-graphs', element: <StudentMyGraphs /> },
       { path: 'courses/:courseId/my-pr', element: <StudentMyPR /> },
       { path: 'courses/:courseId/issues', element: <StudentIssues /> },

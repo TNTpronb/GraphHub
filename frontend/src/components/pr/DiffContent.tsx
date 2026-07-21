@@ -2,7 +2,7 @@
 // 被教师端和学生端复用
 
 import { useState } from 'react'
-import { Tag, Collapse } from 'antd'
+import { Tag } from 'antd'
 import {
   FileAddOutlined, FileTextOutlined, ApartmentOutlined,
   PlusCircleOutlined, EditOutlined, WarningOutlined,
@@ -48,9 +48,11 @@ interface DiffContentProps {
   header?: React.ReactNode
   footer?: React.ReactNode
   conflictFooter?: (file: DiffFile) => React.ReactNode
+  height?: string
+  diffHeight?: string
 }
 
-const DiffContent: React.FC<DiffContentProps> = ({ files = mockDiffFiles, header, footer, conflictFooter }) => {
+const DiffContent: React.FC<DiffContentProps> = ({ files = mockDiffFiles, header, footer, conflictFooter, height, diffHeight }) => {
   const [selectedFile, setSelectedFile] = useState<string | null>(files[0]?.name ?? null)
   const currentFile = files.find((f) => f.name === selectedFile) || files[0]
 
@@ -58,7 +60,7 @@ const DiffContent: React.FC<DiffContentProps> = ({ files = mockDiffFiles, header
     <div>
       {header}
 
-      <div style={{ display: 'flex', gap: 16, height: 'calc(100vh - 48px - 120px)' }}>
+      <div style={{ display: 'flex', gap: 16, height: height || 'calc(100vh - 48px - 120px)' }}>
         {/* 文件列表 */}
         <div style={{ width: 220, flexShrink: 0, background: '#fff', border: '0.5px solid var(--color-border)', borderRadius: 8, overflow: 'auto' }}>
           <div style={{ padding: '10px 14px', fontSize: 13, fontWeight: 600, borderBottom: '0.5px solid var(--color-border)' }}>变更文件 ({files.length})</div>
@@ -111,26 +113,28 @@ const DiffContent: React.FC<DiffContentProps> = ({ files = mockDiffFiles, header
         </div>
       </div>
 
-      {/* 图谱变更摘要 */}
-      <div style={{ marginTop: 16 }}>
-        <Collapse items={[{
-          key: 'graph', label: <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><ApartmentOutlined style={{ color: '#956BF5' }} /><span>图谱变更摘要</span><Tag color="green" style={{ fontSize: 11 }}>+{graphChanges.nodesAdded + graphChanges.edgesAdded}</Tag><Tag color="gold" style={{ fontSize: 11 }}>~{graphChanges.nodesModified + graphChanges.edgesModified}</Tag></span>,
-          children: (
-            <div style={{ padding: '8px 0' }}>
-              <div style={{ display: 'flex', gap: 24, marginBottom: 12, fontSize: 13 }}>
-                <span><PlusCircleOutlined style={{ color: '#1A7F1A' }} /> 节点 +{graphChanges.nodesAdded}</span>
-                <span><EditOutlined style={{ color: '#D4A72C' }} /> 节点 ~{graphChanges.nodesModified}</span>
-                <span><PlusCircleOutlined style={{ color: '#1A7F1A' }} /> 链接 +{graphChanges.edgesAdded}</span>
-              </div>
-              {graphChanges.details.map((d, i) => (
-                <div key={i} style={{ padding: '6px 0', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ color: d.type === 'add' ? '#1A7F1A' : '#D4A72C', fontWeight: 600, fontFamily: 'var(--font-mono)' }}>{d.type === 'add' ? '+' : '~'}</span>
-                  <span>{d.desc}</span>
-                </div>
-              ))}
-            </div>
-          ),
-        }]} />
+      {/* 图谱变更摘要 — 块状展示，不再折叠 */}
+      <div style={{
+        marginTop: 16, padding: '12px 16px', background: '#fff',
+        border: '0.5px solid var(--color-border)', borderRadius: 8,
+      }}>
+        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <ApartmentOutlined style={{ color: '#956BF5' }} />
+          <span>图谱变更摘要</span>
+          <Tag color="green" style={{ fontSize: 11 }}>+{graphChanges.nodesAdded + graphChanges.edgesAdded}</Tag>
+          <Tag color="gold" style={{ fontSize: 11 }}>~{graphChanges.nodesModified + graphChanges.edgesModified}</Tag>
+        </div>
+        <div style={{ display: 'flex', gap: 24, marginBottom: 8, fontSize: 13 }}>
+          <span><PlusCircleOutlined style={{ color: '#1A7F1A' }} /> 节点 +{graphChanges.nodesAdded}</span>
+          <span><EditOutlined style={{ color: '#D4A72C' }} /> 节点 ~{graphChanges.nodesModified}</span>
+          <span><PlusCircleOutlined style={{ color: '#1A7F1A' }} /> 链接 +{graphChanges.edgesAdded}</span>
+        </div>
+        {graphChanges.details.map((d, i) => (
+          <div key={i} style={{ padding: '3px 0', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ color: d.type === 'add' ? '#1A7F1A' : '#D4A72C', fontWeight: 600, fontFamily: 'var(--font-mono)' }}>{d.type === 'add' ? '+' : '~'}</span>
+            <span>{d.desc}</span>
+          </div>
+        ))}
       </div>
 
       {footer}

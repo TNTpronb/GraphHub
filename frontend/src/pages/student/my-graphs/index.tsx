@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Button, Tag, message, Modal } from 'antd'
-import { PlusOutlined, EditOutlined, DeleteOutlined, ForkOutlined } from '@ant-design/icons'
+import { Button, Tag, message, Modal, Input, Dropdown } from 'antd'
+import { EditOutlined, MoreOutlined, ForkOutlined, DeleteOutlined } from '@ant-design/icons'
 
 interface GraphVersion {
   key: string
@@ -26,28 +26,40 @@ const mockVersions: GraphVersion[] = [
 const MyGraphsPage = () => {
   const navigate = useNavigate()
   const [versions, setVersions] = useState(mockVersions)
+  const [renameModal, setRenameModal] = useState<{ key: string; label: string } | null>(null)
+  const [newName, setNewName] = useState('')
 
   const handleForkNew = () => {
     const v = versions.length + 1
-    setVersions((prev) => [{
-      key: `v${v}`, label: `新复刻 v${v}`,
-      forkedAt: '刚刚', sourceVersion: '班级图谱 v45',
-      description: '基于当前班级图谱最新版本的 Fork 副本', nodeCount: 50,
-    }, ...prev])
+    setVersions((prev) => [{ key: `v${v}`, label: `新复刻 v${v}`, forkedAt: '刚刚',
+      sourceVersion: '班级图谱 v45', description: '基于当前班级图谱最新版本的 Fork 副本', nodeCount: 50 }, ...prev])
     message.success('新私人图谱已创建')
   }
 
+  const handleForkFromGraph = (source: GraphVersion) => {
+    const v = versions.length + 1
+    setVersions((prev) => [{ key: `v${v}`, label: `${source.label} 的副本`, forkedAt: '刚刚',
+      sourceVersion: `我的图谱 ${source.key}`, description: `基于私人图谱「${source.label}」的 Fork 副本`, nodeCount: source.nodeCount }, ...prev])
+    message.success(`已从「${source.label}」复刻新版本`)
+  }
+
+  const handleOpenRename = (key: string, label: string) => {
+    setRenameModal({ key, label })
+    setNewName(label)
+  }
+
+  const handleRename = () => {
+    if (!newName.trim() || !renameModal) return
+    setVersions((prev) => prev.map((v) => v.key === renameModal.key ? { ...v, label: newName.trim() } : v))
+    message.success('重命名成功')
+    setRenameModal(null)
+  }
+
   const handleDelete = (key: string, label: string) => {
-    Modal.confirm({
-      title: '确认删除',
+    Modal.confirm({ title: '确认删除',
       content: `确定要删除私人图谱「${label}」吗？此操作不可恢复。`,
-      okText: '删除', cancelText: '取消',
-      okButtonProps: { danger: true },
-      onOk: () => {
-        setVersions((prev) => prev.filter((v) => v.key !== key))
-        message.success('已删除')
-      },
-    })
+      okText: '删除', cancelText: '取消', okButtonProps: { danger: true },
+      onOk: () => { setVersions((prev) => prev.filter((v) => v.key !== key)); message.success('已删除') } })
   }
 
   return (
@@ -59,35 +71,43 @@ const MyGraphsPage = () => {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         {versions.map((v) => (
-          <div key={v.key} style={{
-            padding: '16px 20px', background: '#fff',
-            border: '0.5px solid var(--color-border)', borderRadius: 8,
-          }}>
+          <div key={v.key} style={{ padding: '16px 20px', background: '#fff', border: '0.5px solid var(--color-border)', borderRadius: 8 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
               <div>
                 <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>{v.label}</div>
-                <div style={{ fontSize: 12, color: '#999' }}>
-                  基于 {v.sourceVersion} · {v.forkedAt} · {v.nodeCount} 个节点
-                </div>
+                <div style={{ fontSize: 12, color: '#999' }}>基于 {v.sourceVersion} · {v.forkedAt} · {v.nodeCount} 个节点</div>
               </div>
-              <Tag color="purple">{v.key}</Tag>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Tag color="purple">{v.key}</Tag>
+                <Button size="small" type="primary" icon={<EditOutlined />}
+                  onClick={() => navigate(`/student/courses/course-1/my-graphs/${v.key}`)}>编辑</Button>
+                <Dropdown menu={{
+                  items: [
+                    { key: 'fork', label: '复刻', icon: <ForkOutlined /> },
+                    { key: 'rename', label: '重命名', icon: <EditOutlined /> },
+                    { type: 'divider' as const },
+                    { key: 'delete', label: '删除', icon: <DeleteOutlined />, danger: true },
+                  ],
+                  onClick: ({ key }) => {
+                    if (key === 'fork') handleForkFromGraph(v)
+                    if (key === 'rename') handleOpenRename(v.key, v.label)
+                    if (key === 'delete') handleDelete(v.key, v.label)
+                  },
+                }} trigger={['click']}>
+                  <Button size="small" icon={<MoreOutlined />} style={{ width: 28, padding: 0 }} />
+                </Dropdown>
+              </div>
             </div>
-            <p style={{ fontSize: 13, color: '#6B6B6B', marginBottom: 12, lineHeight: 1.5 }}>
-              {v.description}
-            </p>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <Button size="small" type="primary" icon={<EditOutlined />}
-                onClick={() => navigate(`/student/courses/course-1/my-graphs/${v.key}`)}>
-                编辑
-              </Button>
-              <Button size="small" danger icon={<DeleteOutlined />}
-                onClick={() => handleDelete(v.key, v.label)}>
-                删除
-              </Button>
-            </div>
+            <p style={{ fontSize: 13, color: '#6B6B6B', marginBottom: 0, lineHeight: 1.5 }}>{v.description}</p>
           </div>
         ))}
       </div>
+
+      <Modal title="重命名" open={!!renameModal}
+        onCancel={() => setRenameModal(null)} onOk={handleRename} okText="确认" cancelText="取消">
+        <Input placeholder="输入新名称" value={newName}
+          onChange={(e) => setNewName(e.target.value)} onPressEnter={handleRename} autoFocus />
+      </Modal>
     </div>
   )
 }
