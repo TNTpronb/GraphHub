@@ -40,8 +40,8 @@ const StudentGraphPage = () => {
                 <GraphCanvas readOnly={false} />
               </div>
             </div>
-            <div style={{ width: 1, background: 'var(--color-border)', margin: '0 16px', alignSelf: 'stretch' }} />
-            <div style={{ width: 320, flexShrink: 0, overflow: 'auto', paddingTop: 44 }}>
+            <div style={{ width: 1, background: 'var(--color-border)', alignSelf: 'stretch' }} />
+            <div style={{ width: 320, flexShrink: 0, overflow: 'auto' }}>
               <NoteDetailPanel nodeId={selectedNodeId} />
             </div>
           </div>
