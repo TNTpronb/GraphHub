@@ -4,13 +4,8 @@ import React from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Tooltip } from 'antd'
 import {
-  ApartmentOutlined,
-  AuditOutlined,
-  TeamOutlined,
-  InfoCircleOutlined,
-  BugOutlined,
-  FileTextOutlined,
-  TrophyOutlined,
+  ApartmentOutlined, AuditOutlined, TeamOutlined,
+  InfoCircleOutlined, BugOutlined, TrophyOutlined, ForkOutlined,
 } from '@ant-design/icons'
 
 interface ToolbarButton {
@@ -32,6 +27,7 @@ const teacherButtons: ToolbarButton[] = [
 // 学生端工具栏按钮
 const studentButtons: ToolbarButton[] = [
   { key: 'graph',         icon: <ApartmentOutlined />,  label: '图谱',      path: 'graph' },
+  { key: 'my-graphs',    icon: <ForkOutlined />,        label: '我的图谱',  path: 'my-graphs' },
   { key: 'my-pr',         icon: <AuditOutlined />,      label: '我的提交',   path: 'my-pr' },
   { key: 'issues',        icon: <BugOutlined />,        label: 'Issue',     path: 'issues' },
   { key: 'contributions', icon: <TrophyOutlined />,     label: '我的贡献',   path: 'contributions' },
@@ -50,7 +46,7 @@ const CourseToolbar: React.FC<CourseToolbarProps> = ({ role, courseId }) => {
   const buttons = role === 'teacher' ? teacherButtons : studentButtons
 
   // 判断当前活跃的按钮
-  const activeKey = buttons.find((b) => location.pathname.endsWith(`/${b.path}`))?.key || 'graph'
+  const activeKey = buttons.find((b) => location.pathname.split('/').includes(b.path))?.key || 'graph'
 
   return (
     <div style={{

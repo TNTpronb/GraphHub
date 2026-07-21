@@ -50,8 +50,8 @@ const StudentLayout = () => {
     return () => { document.removeEventListener('mousemove', mm); document.removeEventListener('mouseup', mu) }
   }, [dragging])
 
-  const isContentPage = ['graph', 'exercises', 'my-pr', 'issues', 'contributions', 'info'].includes(urlSubPath)
-  const isGraphPage = urlSubPath === 'graph'
+  const isContentPage = ['graph', 'exercises', 'my-pr', 'issues', 'contributions', 'info', 'diff', 'my-graphs'].includes(urlSubPath)
+  const isGraphPage = urlSubPath === 'graph' || (urlSubPath === 'my-graphs' && !!pathParts[5])
 
   const iconBtnStyle: React.CSSProperties = {
     width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center',

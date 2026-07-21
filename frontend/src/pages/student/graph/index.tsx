@@ -15,7 +15,7 @@ const StudentGraphPage = () => {
   const { tabs, activeKey, closeTab, setActiveKey } = useWorkspaceStore()
 
   const handleFork = () => {
-    navigate('/student/private-graph/private-graph-1')
+    navigate('/student/courses/course-1/my-graphs')
   }
 
   const handleEdit = (key: React.MouseEvent | React.KeyboardEvent | string, action: 'add' | 'remove') => {

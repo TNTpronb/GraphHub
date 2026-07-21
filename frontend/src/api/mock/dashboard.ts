@@ -108,21 +108,21 @@ export const mockStudentCourses: StudentCourseCard[] = [
 
 export const mockStudentPRs: StudentPRItem[] = [
   {
-    id: 'pr-12',
+    id: 'pr-001',
     title: '新增节点',
     description: '红黑树 #knowledge-point #code-implementation',
     status: 'approved',
     createdAt: '2 小时前',
   },
   {
-    id: 'pr-11',
+    id: 'pr-002',
     title: '修改关系',
     description: '添加栈←队列的 PREREQUISITE 关系',
     status: 'pending',
     createdAt: '昨天',
   },
   {
-    id: 'pr-10',
+    id: 'pr-003',
     title: '补充易错点',
     description: '链表空指针异常 #error-point',
     status: 'rejected',

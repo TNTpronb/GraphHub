@@ -28,6 +28,9 @@ import StudentIssues        from '../pages/student/issues'
 import StudentInfo          from '../pages/student/info'
 import StudentMyPR          from '../pages/student/my-pr'
 import StudentContributions from '../pages/student/contributions'
+import StudentDiff         from '../pages/student/diff'
+import StudentMyGraphs     from '../pages/student/my-graphs'
+import StudentGraphEditor  from '../pages/student/my-graphs-editor'
 
 const router = createBrowserRouter([
   // ── 登录/注册/忘记密码（独立路由，无布局壳） ──
@@ -72,10 +75,13 @@ const router = createBrowserRouter([
       { index: true, element: <StudentDashboard /> },
       { path: 'dashboard', element: <StudentDashboard /> },
       { path: 'courses/:courseId/graph', element: <StudentGraph /> },
+      { path: 'courses/:courseId/my-graphs/:versionKey', element: <StudentGraphEditor /> },
+      { path: 'courses/:courseId/my-graphs', element: <StudentMyGraphs /> },
       { path: 'courses/:courseId/my-pr', element: <StudentMyPR /> },
       { path: 'courses/:courseId/issues', element: <StudentIssues /> },
       { path: 'courses/:courseId/contributions', element: <StudentContributions /> },
       { path: 'courses/:courseId/info', element: <StudentInfo /> },
+      { path: 'courses/:courseId/diff/:prId', element: <StudentDiff /> },
       { path: 'courses/:courseId/exercises', element: <StudentDashboard /> },
       { path: 'private-graph/:graphId', element: <StudentPrivateGraph /> },
       { path: 'pr/:prId', element: <StudentPR /> },
