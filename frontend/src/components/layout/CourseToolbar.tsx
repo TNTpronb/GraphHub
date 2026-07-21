@@ -5,7 +5,8 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { Tooltip } from 'antd'
 import {
   ApartmentOutlined, AuditOutlined, TeamOutlined,
-  InfoCircleOutlined, BugOutlined, TrophyOutlined, ForkOutlined,
+  InfoCircleOutlined, BugOutlined, TrophyOutlined,
+  ForkOutlined, HistoryOutlined,
 } from '@ant-design/icons'
 
 interface ToolbarButton {
@@ -15,19 +16,19 @@ interface ToolbarButton {
   path: string
 }
 
-// 教师端工具栏按钮
 const teacherButtons: ToolbarButton[] = [
-  { key: 'graph',    icon: <ApartmentOutlined />, label: '图谱',   path: 'graph' },
-  { key: 'review',   icon: <AuditOutlined />,    label: '审核',   path: 'review' },
-  { key: 'members',  icon: <TeamOutlined />,     label: '成员',   path: 'enrollments' },
-  { key: 'issues',   icon: <BugOutlined />,      label: 'Issue', path: 'issues' },
-  { key: 'info',     icon: <InfoCircleOutlined />, label: '信息', path: 'info' },
+  { key: 'graph',    icon: <ApartmentOutlined />, label: '图谱',    path: 'graph' },
+  { key: 'history',  icon: <HistoryOutlined />,    label: '历史',    path: 'graph/versions' },
+  { key: 'review',   icon: <AuditOutlined />,    label: '审核',    path: 'review' },
+  { key: 'members',  icon: <TeamOutlined />,     label: '成员',    path: 'enrollments' },
+  { key: 'issues',   icon: <BugOutlined />,      label: 'Issue',   path: 'issues' },
+  { key: 'info',     icon: <InfoCircleOutlined />, label: '信息',   path: 'info' },
 ]
 
-// 学生端工具栏按钮
 const studentButtons: ToolbarButton[] = [
   { key: 'graph',         icon: <ApartmentOutlined />,  label: '图谱',      path: 'graph' },
-  { key: 'my-graphs',    icon: <ForkOutlined />,        label: '我的图谱',  path: 'my-graphs' },
+  { key: 'history',       icon: <HistoryOutlined />,    label: '历史',      path: 'graph/versions' },
+  { key: 'my-graphs',     icon: <ForkOutlined />,       label: '我的图谱',  path: 'my-graphs' },
   { key: 'my-pr',         icon: <AuditOutlined />,      label: '我的提交',   path: 'my-pr' },
   { key: 'issues',        icon: <BugOutlined />,        label: 'Issue',     path: 'issues' },
   { key: 'contributions', icon: <TrophyOutlined />,     label: '我的贡献',   path: 'contributions' },
@@ -45,8 +46,9 @@ const CourseToolbar: React.FC<CourseToolbarProps> = ({ role, courseId }) => {
 
   const buttons = role === 'teacher' ? teacherButtons : studentButtons
 
-  // 判断当前活跃的按钮
-  const activeKey = buttons.find((b) => location.pathname.split('/').includes(b.path))?.key || 'graph'
+  const activeKey = buttons.find((b) =>
+    location.pathname.split('/').slice(-b.path.split('/').length).join('/') === b.path
+  )?.key || 'graph'
 
   return (
     <div style={{

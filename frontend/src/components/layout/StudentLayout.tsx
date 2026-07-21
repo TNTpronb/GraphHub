@@ -34,6 +34,7 @@ const StudentLayout = () => {
   }
   const urlSubPath = inCourse ? (pathParts[4] || 'graph') : (pathParts[2] || 'dashboard')
   const urlCourseId = inCourse ? pathParts[3] : undefined
+  const courseSubPath = urlCourseId ? location.pathname.split(`/courses/${urlCourseId}/`)[1] || 'graph' : undefined
 
   const onMenuClick: MenuProps['onClick'] = ({ key }) => {
     setDrawerOpen(false)
@@ -50,8 +51,8 @@ const StudentLayout = () => {
     return () => { document.removeEventListener('mousemove', mm); document.removeEventListener('mouseup', mu) }
   }, [dragging])
 
-  const isContentPage = ['graph', 'exercises', 'my-pr', 'issues', 'contributions', 'info', 'diff', 'my-graphs'].includes(urlSubPath)
-  const isGraphPage = urlSubPath === 'graph' || (urlSubPath === 'my-graphs' && !!pathParts[5])
+  const isContentPage = ['graph', 'graph/versions', 'exercises', 'my-pr', 'issues', 'contributions', 'info', 'diff', 'my-graphs'].includes(courseSubPath)
+  const isGraphPage = courseSubPath === 'graph' || (courseSubPath === 'my-graphs' && !!pathParts[5])
 
   const iconBtnStyle: React.CSSProperties = {
     width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center',

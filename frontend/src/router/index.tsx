@@ -20,6 +20,7 @@ import TeacherIssues        from '../pages/teacher/issues'
 import TeacherInfo          from '../pages/teacher/info'
 import TeacherEnrollments   from '../pages/teacher/enrollments'
 import TeacherDiff         from '../pages/teacher/diff'
+import TeacherHistory      from '../pages/teacher/graph/versions'
 import StudentDashboard     from '../pages/student/dashboard'
 import StudentGraph         from '../pages/student/graph'
 import StudentPR            from '../pages/student/pr'
@@ -56,9 +57,11 @@ const router = createBrowserRouter([
       { path: 'dashboard', element: <TeacherDashboard /> },
       { path: 'courses/new', element: <TeacherCreateCourse /> },
       { path: 'courses/:courseId/graph', element: <TeacherGraph /> },
+      { path: 'courses/:courseId/graph/versions', element: <TeacherHistory /> },
       { path: 'courses/:courseId/review', element: <TeacherReview /> },
       { path: 'courses/:courseId/enrollments', element: <TeacherEnrollments /> },
       { path: 'courses/:courseId/issues', element: <TeacherIssues /> },
+      { path: 'courses/:courseId/info', element: <TeacherInfo /> },
       { path: 'courses/:courseId/diff/:prId', element: <TeacherDiff /> },
       { path: 'courses/:courseId/materials', element: <TeacherDashboard /> },
       { path: 'courses/:courseId/exercises', element: <TeacherDashboard /> },
@@ -75,6 +78,7 @@ const router = createBrowserRouter([
       { index: true, element: <StudentDashboard /> },
       { path: 'dashboard', element: <StudentDashboard /> },
       { path: 'courses/:courseId/graph', element: <StudentGraph /> },
+      { path: 'courses/:courseId/graph/versions', element: <TeacherHistory /> },
       { path: 'courses/:courseId/my-graphs/:versionKey', element: <StudentGraphEditor /> },
       { path: 'courses/:courseId/pr/:prId', element: <StudentPR /> },
       { path: 'courses/:courseId/my-graphs', element: <StudentMyGraphs /> },

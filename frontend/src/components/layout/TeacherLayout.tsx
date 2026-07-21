@@ -45,7 +45,7 @@ const TeacherLayout = () => {
 
   const onMenuClick: MenuProps['onClick'] = ({ key }) => {
     setDrawerOpen(false)
-    if (urlCourseId && ['graph', 'materials', 'exercises', 'analytics', 'enrollments', 'review', 'issues', 'info'].includes(key)) {
+    if (urlCourseId && ['graph', 'graph/versions', 'materials', 'exercises', 'analytics', 'enrollments', 'review', 'issues', 'info'].includes(key)) {
       navigate(`/teacher/courses/${urlCourseId}/${key}`)
       return
     }
@@ -70,8 +70,10 @@ const TeacherLayout = () => {
     { id: 'course-2', name: '操作系统', pendingCount: 1 },
   ]
 
-  const isCoursePage = !!urlCourseId && ['graph', 'materials', 'exercises', 'analytics', 'enrollments', 'review', 'issues', 'info', 'diff'].includes(urlSubPath || '')
-  const isGraphPage = urlSubPath === 'graph'
+  // URL relative sub-path after courses/courseId/
+  const courseSubPath = urlCourseId ? location.pathname.split(`/courses/${urlCourseId}/`)[1] || 'graph' : undefined
+  const isCoursePage = !!urlCourseId && ['graph', 'graph/versions', 'materials', 'exercises', 'analytics', 'enrollments', 'review', 'issues', 'info', 'diff'].includes(courseSubPath)
+  const isGraphPage = courseSubPath === 'graph'
 
   // 每个图标按钮共享的圆角方框样式
   const iconBtnStyle: React.CSSProperties = {
