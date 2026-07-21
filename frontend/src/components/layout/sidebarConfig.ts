@@ -11,16 +11,17 @@ import {
   ExperimentOutlined,
   BarChartOutlined,
   SearchOutlined,
+  TeamOutlined,
 } from '@ant-design/icons'
 import type { ItemType } from 'antd/es/menu/interface'
 
 //教师端相关菜单
 export const teacherCourseMenuItems: ItemType[] = [
-  { key: 'graph',     icon: React.createElement(ApartmentOutlined), label: '图谱管理' },
-  { key: 'materials', icon: React.createElement(FileTextOutlined),   label: '课程资料' },
-  { key: 'exercises', icon: React.createElement(ExperimentOutlined),  label: '习题库' },
-  { key: 'analytics', icon: React.createElement(BarChartOutlined),    label: '学情分析' },
-  { key: 'enrollments', icon: React.createElement(SearchOutlined),   label: '学生管理' },
+  { key: 'graph',       icon: React.createElement(ApartmentOutlined), label: '图谱管理' },
+  { key: 'materials',   icon: React.createElement(FileTextOutlined),   label: '课程资料' },
+  { key: 'exercises',   icon: React.createElement(ExperimentOutlined),  label: '习题库' },
+  { key: 'analytics',   icon: React.createElement(BarChartOutlined),    label: '学情分析' },
+  { key: 'enrollments', icon: React.createElement(TeamOutlined),        label: '学生管理' },
 ]
 
 // 教师端全局菜单（始终显示在侧边栏下方）

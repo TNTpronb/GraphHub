@@ -18,6 +18,7 @@ import TeacherReview        from '../pages/teacher/review'
 import TeacherCreateCourse  from '../pages/teacher/create-course'
 import TeacherIssues        from '../pages/teacher/issues'
 import TeacherInfo          from '../pages/teacher/info'
+import TeacherMaterials    from '../pages/teacher/materials'
 import TeacherEnrollments   from '../pages/teacher/enrollments'
 import TeacherDiff         from '../pages/teacher/diff'
 import TeacherHistory      from '../pages/teacher/graph/versions'
@@ -63,7 +64,7 @@ const router = createBrowserRouter([
       { path: 'courses/:courseId/issues', element: <TeacherIssues /> },
       { path: 'courses/:courseId/info', element: <TeacherInfo /> },
       { path: 'courses/:courseId/diff/:prId', element: <TeacherDiff /> },
-      { path: 'courses/:courseId/materials', element: <TeacherDashboard /> },
+      { path: 'courses/:courseId/materials', element: <TeacherMaterials /> },
       { path: 'courses/:courseId/exercises', element: <TeacherDashboard /> },
       { path: 'courses/:courseId/analytics', element: <TeacherDashboard /> },
       { path: 'review', element: <TeacherReview /> },
@@ -79,6 +80,7 @@ const router = createBrowserRouter([
       { path: 'dashboard', element: <StudentDashboard /> },
       { path: 'courses/:courseId/graph', element: <StudentGraph /> },
       { path: 'courses/:courseId/graph/versions', element: <TeacherHistory /> },
+      { path: 'courses/:courseId/materials', element: <TeacherMaterials /> },
       { path: 'courses/:courseId/my-graphs/:versionKey', element: <StudentGraphEditor /> },
       { path: 'courses/:courseId/pr/:prId', element: <StudentPR /> },
       { path: 'courses/:courseId/my-graphs', element: <StudentMyGraphs /> },

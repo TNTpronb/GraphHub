@@ -50,6 +50,13 @@ export const mockGraphNodes = [
   { id: 'n24', data: { title: '栈溢出',         tags: ['#error-point'] } },
   { id: 'n25', data: { title: '递归深度超限',   tags: ['#error-point'] } },
   { id: 'n26', data: { title: '排序算法比较',   tags: ['#knowledge-point', '#algorithm-case'] } },
+  // 资料节点（通过 md [[链接]] 挂载到知识点）
+  { id: 'm1',  data: { title: '第三章 栈与队列.pptx',    tags: ['#material'] } },
+  { id: 'm2',  data: { title: '链表操作详解.pdf',        tags: ['#material'] } },
+  { id: 'm3',  data: { title: '二叉树遍历动画.mp4',      tags: ['#material'] } },
+  { id: 'm4',  data: { title: '快速排序算法分析.md',     tags: ['#material'] } },
+  { id: 'm5',  data: { title: '堆排序图解.pdf',          tags: ['#material'] } },
+  { id: 'm6',  data: { title: '红黑树旋转演示.pptx',     tags: ['#material'] } },
 ]
 
 // 模拟边数据
@@ -72,6 +79,25 @@ export const mockGraphEdges = [
   { source: 'n6', target: 'n15', data: { relation: 'CONTAINS' } },
   { source: 'n6', target: 'n16', data: { relation: 'CONTAINS' } },
   { source: 'n6', target: 'n17', data: { relation: 'CONTAINS' } },
+
+  // 资料节点作为学科根目录的直接子项（与章节同级）
+  { source: 'n1', target: 'm1', data: { relation: 'CONTAINS' } },
+  { source: 'n1', target: 'm2', data: { relation: 'CONTAINS' } },
+  { source: 'n1', target: 'm3', data: { relation: 'CONTAINS' } },
+  { source: 'n1', target: 'm4', data: { relation: 'CONTAINS' } },
+  { source: 'n1', target: 'm5', data: { relation: 'CONTAINS' } },
+  { source: 'n1', target: 'm6', data: { relation: 'CONTAINS' } },
+
+  // 代码实现/实验/易错点挂载到对应知识点（树状图层级）
+  { source: 'n9',  target: 'n18', data: { relation: 'CONTAINS' } },
+  { source: 'n10', target: 'n19', data: { relation: 'CONTAINS' } },
+  { source: 'n16', target: 'n20', data: { relation: 'CONTAINS' } },
+  { source: 'n8',  target: 'n21', data: { relation: 'CONTAINS' } },
+  { source: 'n11', target: 'n22', data: { relation: 'CONTAINS' } },
+  { source: 'n8',  target: 'n23', data: { relation: 'CONTAINS' } },
+  { source: 'n9',  target: 'n24', data: { relation: 'CONTAINS' } },
+  { source: 'n11', target: 'n25', data: { relation: 'CONTAINS' } },
+  { source: 'n6',  target: 'n26', data: { relation: 'CONTAINS' } },
 
   // PREREQUISITE 关系（前置依赖）— 数组 → 链表 → 栈/队列
   { source: 'n8',  target: 'n7',  data: { relation: 'PREREQUISITE' } },

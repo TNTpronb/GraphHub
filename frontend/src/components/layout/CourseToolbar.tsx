@@ -6,7 +6,7 @@ import { Tooltip } from 'antd'
 import {
   ApartmentOutlined, AuditOutlined, TeamOutlined,
   InfoCircleOutlined, BugOutlined, TrophyOutlined,
-  ForkOutlined, HistoryOutlined,
+  ForkOutlined, HistoryOutlined, FolderOpenOutlined,
 } from '@ant-design/icons'
 
 interface ToolbarButton {
@@ -19,6 +19,7 @@ interface ToolbarButton {
 const teacherButtons: ToolbarButton[] = [
   { key: 'graph',    icon: <ApartmentOutlined />, label: '图谱',    path: 'graph' },
   { key: 'history',  icon: <HistoryOutlined />,    label: '历史',    path: 'graph/versions' },
+  { key: 'materials',icon: <FolderOpenOutlined />, label: '资料',    path: 'materials' },
   { key: 'review',   icon: <AuditOutlined />,    label: '审核',    path: 'review' },
   { key: 'members',  icon: <TeamOutlined />,     label: '成员',    path: 'enrollments' },
   { key: 'issues',   icon: <BugOutlined />,      label: 'Issue',   path: 'issues' },
@@ -28,6 +29,7 @@ const teacherButtons: ToolbarButton[] = [
 const studentButtons: ToolbarButton[] = [
   { key: 'graph',         icon: <ApartmentOutlined />,  label: '图谱',      path: 'graph' },
   { key: 'history',       icon: <HistoryOutlined />,    label: '历史',      path: 'graph/versions' },
+  { key: 'materials',     icon: <FolderOpenOutlined />, label: '资料',      path: 'materials' },
   { key: 'my-graphs',     icon: <ForkOutlined />,       label: '我的图谱',  path: 'my-graphs' },
   { key: 'my-pr',         icon: <AuditOutlined />,      label: '我的提交',   path: 'my-pr' },
   { key: 'issues',        icon: <BugOutlined />,        label: 'Issue',     path: 'issues' },
