@@ -2,7 +2,8 @@
 // 点击图谱节点后，右侧展示节点详情
 
 import { Tag, Divider } from 'antd'
-import { mockGraphNodes, mockGraphEdges, relationColors } from '../../api/mock/graph'
+import { relationColors } from '../../api/mock/graph'
+import { useGraphStore } from '../../stores/graphStore'
 
 interface NoteDetailPanelProps {
   nodeId: string | null
@@ -16,9 +17,13 @@ const relationNameMap: Record<string, string> = {
   CONFUSE_WITH: '易混淆',
   OPTIMIZE_FROM:'优化演进',
   HAS_ERROR:    '常见错误',
+  MD_LINK:      'Markdown 链接',
 }
 
 const NoteDetailPanel: React.FC<NoteDetailPanelProps> = ({ nodeId }) => {
+  const graphNodes = useGraphStore((s) => s.graphNodes)
+  const graphEdges = useGraphStore((s) => s.graphEdges)
+
   // 未选中任何节点
   if (!nodeId) {
     return (
@@ -34,13 +39,13 @@ const NoteDetailPanel: React.FC<NoteDetailPanelProps> = ({ nodeId }) => {
   }
 
   // 查找节点数据
-  const node = mockGraphNodes.find((n) => n.id === nodeId)
+  const node = graphNodes.find((n) => n.id === nodeId)
   if (!node) {
     return <div style={{ padding: 24 }}>节点未找到</div>
   }
 
   // 查找与该节点相关的所有边
-  const relatedEdges = mockGraphEdges.filter(
+  const relatedEdges = graphEdges.filter(
     (e) => e.source === nodeId || e.target === nodeId
   )
 
@@ -88,7 +93,7 @@ const NoteDetailPanel: React.FC<NoteDetailPanelProps> = ({ nodeId }) => {
             // 判断当前节点是 source 还是 target
             const isSource = edge.source === nodeId
             const otherNodeId = isSource ? edge.target : edge.source
-            const otherNode = mockGraphNodes.find((n) => n.id === otherNodeId)
+            const otherNode = graphNodes.find((n) => n.id === otherNodeId)
             const relation = edge.data.relation
 
             return (
@@ -144,9 +149,15 @@ const NoteDetailPanel: React.FC<NoteDetailPanelProps> = ({ nodeId }) => {
         borderRadius: 'var(--radius-md)',
         border: '0.5px solid var(--color-border)',
       }}>
-        <em># 待从 Neo4j 加载 Markdown 内容</em>
-        <br />
-        <em>此处将渲染 Note.content 的 Markdown 正文</em>
+        {node.data.content ? (
+          <pre style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}>{node.data.content}</pre>
+        ) : (
+          <>
+            <em># 待从 Neo4j 加载 Markdown 内容</em>
+            <br />
+            <em>此处将渲染 Note.content 的 Markdown 正文</em>
+          </>
+        )}
       </div>
     </div>
   )

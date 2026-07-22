@@ -22,6 +22,8 @@ import TeacherMaterials    from '../pages/teacher/materials'
 import TeacherEnrollments   from '../pages/teacher/enrollments'
 import TeacherDiff         from '../pages/teacher/diff'
 import TeacherHistory      from '../pages/teacher/graph/versions'
+import TeacherExercises    from '../pages/teacher/exercises'
+import TeacherExercisesDetail from '../pages/teacher/exercises/detail'
 import StudentDashboard     from '../pages/student/dashboard'
 import StudentGraph         from '../pages/student/graph'
 import StudentPR            from '../pages/student/pr'
@@ -65,7 +67,8 @@ const router = createBrowserRouter([
       { path: 'courses/:courseId/info', element: <TeacherInfo /> },
       { path: 'courses/:courseId/diff/:prId', element: <TeacherDiff /> },
       { path: 'courses/:courseId/materials', element: <TeacherMaterials /> },
-      { path: 'courses/:courseId/exercises', element: <TeacherDashboard /> },
+      { path: 'courses/:courseId/exercises/:bankId', element: <TeacherExercisesDetail /> },
+      { path: 'courses/:courseId/exercises', element: <TeacherExercises /> },
       { path: 'courses/:courseId/analytics', element: <TeacherDashboard /> },
       { path: 'review', element: <TeacherReview /> },
     ],

@@ -8,12 +8,11 @@ import {
   SearchOutlined, FolderOutlined, FolderOpenOutlined, FileTextOutlined,
   CodeOutlined, ExperimentOutlined, BugOutlined, BulbOutlined,
   MoreOutlined, EditOutlined, DeleteOutlined, ImportOutlined,
-  FormOutlined, FolderAddOutlined, PaperClipOutlined, LinkOutlined,
-  FilePdfOutlined, FilePptOutlined, VideoCameraOutlined,
+  FormOutlined, FolderAddOutlined, LinkOutlined, BookOutlined,
 } from '@ant-design/icons'
-import { mockGraphNodes, mockGraphEdges } from '../../api/mock/graph'
 import { useGraphStore } from '../../stores/graphStore'
 import { useWorkspaceStore } from '../../stores/workspaceStore'
+import { useNavigate, useParams } from 'react-router-dom'
 
 const tagIconMap: Record<string, { icon: React.ReactNode; label: string }> = {
   '#subject':             { icon: <FolderOpenOutlined style={{ color: '#956BF5' }} />,      label: '学科' },
@@ -23,15 +22,16 @@ const tagIconMap: Record<string, { icon: React.ReactNode; label: string }> = {
   '#experiment':          { icon: <ExperimentOutlined style={{ color: '#D4A72C' }} />,      label: '实验' },
   '#error-point':         { icon: <BugOutlined style={{ color: '#CF222E' }} />,             label: '易错点' },
   '#algorithm-case':      { icon: <BulbOutlined style={{ color: '#D4A72C' }} />,            label: '算法案例' },
-  '#material':            { icon: <PaperClipOutlined style={{ color: '#6B6B6B' }} />,       label: '资料' },
+  '#material':            { icon: <BookOutlined style={{ color: '#B8591A' }} />,            label: '资料' },
+  '#exercise-bank':       { icon: <FormOutlined style={{ color: '#3B82F6' }} />,            label: '习题库' },
 }
 
-const buildTreeData = (): DataNode[] => {
+const buildTreeData = (nodes: any[], edges: any[]): DataNode[] => {
   const nodeMap = new Map<string, any>()
-  mockGraphNodes.forEach((n) => nodeMap.set(n.id, n))
+  nodes.forEach((n) => nodeMap.set(n.id, n))
 
   const childrenMap = new Map<string, string[]>()
-  mockGraphEdges
+  edges
     .filter((e) => e.data.relation === 'CONTAINS')
     .forEach((e) => {
       const list = childrenMap.get(e.source) || []
@@ -56,7 +56,7 @@ const buildTreeData = (): DataNode[] => {
     }).filter(Boolean) as DataNode[]
   }
 
-  const subjectNode = mockGraphNodes.find((n) => n.data.tags.includes('#subject'))
+  const subjectNode = nodes.find((n) => n.data.tags.includes('#subject'))
   if (!subjectNode) return []
   return [{
     key: 'root',
@@ -85,27 +85,25 @@ const filterTree = (nodes: DataNode[], text: string): DataNode[] => {
 const TreeNodeList: React.FC<{ readOnly?: boolean }> = ({ readOnly = false }) => {
   const selectedNodeId = useGraphStore((s) => s.selectedNodeId)
   const setSelectedNodeId = useGraphStore((s) => s.setSelectedNodeId)
+  const graphNodes = useGraphStore((s) => s.graphNodes)
+  const graphEdges = useGraphStore((s) => s.graphEdges)
   const openTab = useWorkspaceStore((s) => s.openTab)
+  const navigate = useNavigate()
+  const { courseId = 'course-1' } = useParams()
   const [searchText, setSearchText] = useState('')
   const [expandedKeys, setExpandedKeys] = useState<string[]>(['root'])
   const [deleteModal, setDeleteModal] = useState<{ nodeKey: string; title: string } | null>(null)
   const [hoveredKey, setHoveredKey] = useState<string | null>(null)
 
-  const nodeMap = useMemo(() => {
-    const map = new Map<string, any>()
-    mockGraphNodes.forEach((n) => map.set(n.id, n))
-    return map
-  }, [])
-
   const parentMap = useMemo(() => {
     const map = new Map<string, string>()
-    mockGraphEdges.filter((e) => e.data.relation === 'CONTAINS').forEach((e) => map.set(e.target, e.source))
+    graphEdges.filter((e) => e.data.relation === 'CONTAINS').forEach((e) => map.set(e.target, e.source))
     return map
-  }, [])
+  }, [graphEdges])
 
   const isFolder = useCallback((key: string) => {
-    return mockGraphEdges.some((e) => e.data.relation === 'CONTAINS' && e.source === key)
-  }, [])
+    return graphEdges.some((e) => e.data.relation === 'CONTAINS' && e.source === key)
+  }, [graphEdges])
 
   useEffect(() => {
     if (!selectedNodeId) return
@@ -173,16 +171,22 @@ const TreeNodeList: React.FC<{ readOnly?: boolean }> = ({ readOnly = false }) =>
     const isHovered = hoveredKey === nodeKey
     const isRoot = node.isRoot
     return (
-      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}
         onMouseEnter={() => setHoveredKey(nodeKey)}
         onMouseLeave={() => setHoveredKey(null)}
         onDoubleClick={(e) => {
           e.stopPropagation()
           if (!isFolder(nodeKey) && nodeKey !== 'root') {
-            openTab({ key: nodeKey, label: nodeTitle, type: 'editor', nodeId: nodeKey })
+            const tags = node.data?.data?.tags || []
+            if (tags.includes('#exercise-bank')) {
+              navigate(`/teacher/courses/${courseId}/exercises/${nodeKey}`)
+            } else {
+              openTab({ key: nodeKey, label: nodeTitle, type: 'editor', nodeId: nodeKey })
+            }
           }
         }}>
-        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{nodeTitle}</span>
+        <span style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', fontSize: 14 }}>{node.icon}</span>
+        <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{nodeTitle}</span>
         {(isHovered || isRoot) && !readOnly && (
           <Dropdown menu={getContextMenu(node)} trigger={['click']}>
             <span onClick={(e) => e.stopPropagation()} style={{
@@ -199,24 +203,27 @@ const TreeNodeList: React.FC<{ readOnly?: boolean }> = ({ readOnly = false }) =>
   }, [hoveredKey, getContextMenu, readOnly, isFolder, openTab])
 
   const renderNodes = useCallback((nodes: DataNode[]): DataNode[] =>
-    nodes.map((node) => ({
-      ...node,
-      title: renderTreeTitle(node),
-      children: node.children ? renderNodes(node.children) : undefined,
-    })), [renderTreeTitle])
+    nodes.map((node) => {
+      const { icon: _icon, ...rest } = node as any
+      return {
+        ...rest,
+        title: renderTreeTitle(node),
+        children: node.children ? renderNodes(node.children) : undefined,
+      } as DataNode
+    }), [renderTreeTitle])
 
-  const rawTree = useMemo(buildTreeData, [])
+  const rawTree = useMemo(() => buildTreeData(graphNodes, graphEdges), [graphNodes, graphEdges])
   const searchFiltered = useMemo(() => filterTree(rawTree, searchText), [rawTree, searchText])
   const treeData = useMemo(() => renderNodes(searchFiltered), [searchFiltered, renderNodes])
 
   const stats = useMemo(() => {
     const counts: Record<string, number> = {}
-    mockGraphNodes.forEach((n) => {
+    graphNodes.forEach((n) => {
       const tag = n.data.tags[0] || '#unknown'
       counts[tag] = (counts[tag] || 0) + 1
     })
     return counts
-  }, [])
+  }, [graphNodes])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -235,7 +242,7 @@ const TreeNodeList: React.FC<{ readOnly?: boolean }> = ({ readOnly = false }) =>
             blockNode
             draggable
             allowDrop={({ dropNode }) => { const k = dropNode.key as string; return k === 'root' || isFolder(k) }}
-            onDrop={({ node, dragNode }) => message.success(`已移动 ${(dragNode as any).data?.data?.title || dragNode.title}`)}
+            onDrop={({ node: _node, dragNode }) => message.success(`已移动 ${(dragNode as any).data?.data?.title || dragNode.title}`)}
             style={{ background: 'transparent', fontSize: 13, padding: '0 8px' }} />
         ) : (
           <div style={{ color: '#999', fontSize: 13, textAlign: 'center', padding: '32px 12px' }}>{searchText ? '无匹配' : '暂无数据'}</div>

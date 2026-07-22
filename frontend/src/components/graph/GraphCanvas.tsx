@@ -1,6 +1,6 @@
 // 自研图渲染引擎：d3-force 物理 + Canvas 2D 渲染
 
-import { useEffect, useRef, useCallback, useState } from 'react'
+import { useEffect, useRef, useCallback, useState, useMemo } from 'react'
 import {
   forceSimulation,
   forceLink,
@@ -10,9 +10,9 @@ import {
 } from 'd3-force'
 import { Button, Popover, Switch, Slider, Collapse } from 'antd'
 import { SettingOutlined } from '@ant-design/icons'
-import { mockGraphNodes, mockGraphEdges } from '../../api/mock/graph'
 import { useGraphStore } from '../../stores/graphStore'
 import { useWorkspaceStore } from '../../stores/workspaceStore'
+import { useNavigate, useParams } from 'react-router-dom'
 
 interface GraphCanvasProps {
   selectedNodeId?: string | null
@@ -26,20 +26,26 @@ interface SimNode {
 }
 interface SimEdge { source: string; target: string }
 
-const degreeMap: Record<string, number> = {}
-mockGraphNodes.forEach((n) => { degreeMap[n.id] = 0 })
-mockGraphEdges.forEach((e) => {
-  degreeMap[e.source] = (degreeMap[e.source] || 0) + 1
-  degreeMap[e.target] = (degreeMap[e.target] || 0) + 1
-})
-const maxDegree = Math.max(...Object.values(degreeMap), 1)
-
 const GraphCanvas: React.FC<GraphCanvasProps> = ({
   selectedNodeId, onNodeClick, readOnly = false,
 }) => {
   const storeSelected = useGraphStore((s) => s.selectedNodeId)
   const setSelectedNodeId = useGraphStore((s) => s.setSelectedNodeId)
+  const graphNodes = useGraphStore((s) => s.graphNodes)
+  const graphEdges = useGraphStore((s) => s.graphEdges)
   const openTab = useWorkspaceStore((s) => s.openTab)
+
+  const { degreeMap, maxDegree } = useMemo(() => {
+    const map: Record<string, number> = {}
+    graphNodes.forEach((n) => { map[n.id] = 0 })
+    graphEdges.forEach((e) => {
+      map[e.source] = (map[e.source] || 0) + 1
+      map[e.target] = (map[e.target] || 0) + 1
+    })
+    return { degreeMap: map, maxDegree: Math.max(...Object.values(map), 1) }
+  }, [graphNodes, graphEdges])
+  const navigate = useNavigate()
+  const { courseId = 'course-1' } = useParams()
   const effectiveSelected = selectedNodeId !== undefined ? selectedNodeId : storeSelected
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const simRef = useRef<any>(null)
@@ -211,12 +217,12 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
     window.addEventListener('resize', resize)
 
     const tagNodeIds = new Set(
-      mockGraphNodes
+      graphNodes
         .filter((n) => n.data.tags.some((t: string) => t === '#subject' || t === '#chapter'))
         .map((n) => n.id)
     )
 
-    const nodes: SimNode[] = mockGraphNodes.map((n) => {
+    const nodes: SimNode[] = graphNodes.map((n) => {
       const deg = degreeMap[n.id] || 1
       const g = Math.round(220 - (deg / maxDegree) * 140)
       return {
@@ -229,7 +235,7 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
       }
     })
 
-    const edges: SimEdge[] = mockGraphEdges.map((e) => ({ source: e.source, target: e.target }))
+    const edges: SimEdge[] = graphEdges.map((e) => ({ source: e.source, target: e.target }))
     nodesRef.current = nodes; edgesRef.current = edges
     allNodesRef.current = [...nodes] // 保存完整列表
 
@@ -332,8 +338,12 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
             doubleClickRef.current = null
             const node = nodesRef.current.find((n) => n.id === hit.id)
             if (node && !node.isTag) {
-              const title = node.title
-              openTab({ key: hit.id, label: title, type: 'editor', nodeId: hit.id })
+              const graphNode = graphNodes.find((n) => n.id === hit.id)
+              if (graphNode?.data.tags.includes('#exercise-bank')) {
+                navigate(`/teacher/courses/${courseId}/exercises/${hit.id}`)
+              } else {
+                openTab({ key: hit.id, label: node.title, type: 'editor', nodeId: hit.id })
+              }
             }
           } else {
             doubleClickRef.current = { nodeId: hit.id, time: now }

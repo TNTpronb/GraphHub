@@ -72,7 +72,11 @@ const TeacherLayout = () => {
 
   // URL relative sub-path after courses/courseId/
   const courseSubPath = urlCourseId ? location.pathname.split(`/courses/${urlCourseId}/`)[1] || 'graph' : undefined
-  const isCoursePage = !!urlCourseId && ['graph', 'graph/versions', 'materials', 'exercises', 'analytics', 'enrollments', 'review', 'issues', 'info', 'diff'].includes(courseSubPath)
+  const coursePaths = ['graph', 'graph/versions', 'materials', 'exercises', 'analytics', 'enrollments', 'review', 'issues', 'info', 'diff']
+  const isCoursePage = !!urlCourseId && (
+    coursePaths.includes(courseSubPath) ||
+    courseSubPath?.startsWith('exercises/')
+  )
   const isGraphPage = courseSubPath === 'graph'
 
   // 每个图标按钮共享的圆角方框样式

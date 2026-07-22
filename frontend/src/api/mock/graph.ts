@@ -11,7 +11,7 @@
   }
 */
 
-// 6 种标签对应的节点颜色
+// 标签对应的节点颜色
 const tagColors: Record<string, string> = {
   '#subject':              '#956BF5',
   '#chapter':              '#7B52E0',
@@ -20,6 +20,8 @@ const tagColors: Record<string, string> = {
   '#experiment':           '#E8F5E9',
   '#algorithm-case':       '#FFF3E0',
   '#error-point':          '#FFEBEE',
+  '#material':             '#F6F8FA',
+  '#exercise-bank':        '#EAF5FF',
 }
 
 // 模拟节点数据
@@ -31,12 +33,12 @@ export const mockGraphNodes = [
   { id: 'n5',  data: { title: '图',             tags: ['#chapter'] } },
   { id: 'n6',  data: { title: '排序算法',       tags: ['#chapter'] } },
   { id: 'n7',  data: { title: '数组',           tags: ['#knowledge-point'] } },
-  { id: 'n8',  data: { title: '链表',           tags: ['#knowledge-point'] } },
-  { id: 'n9',  data: { title: '栈',             tags: ['#knowledge-point'] } },
+  { id: 'n8',  data: { title: '链表',           tags: ['#knowledge-point'], content: '## 链表\n链表是一种通过指针连接节点的线性结构。\n\n## 配套练习\n- [[链表算法训练]]' } },
+  { id: 'n9',  data: { title: '栈',             tags: ['#knowledge-point'], content: '## 栈\n栈是一种后进先出（LIFO）的线性结构。\n\n## 配套练习\n- [[栈基础练习]]' } },
   { id: 'n10', data: { title: '队列',           tags: ['#knowledge-point'] } },
   { id: 'n11', data: { title: '二叉树',         tags: ['#knowledge-point'] } },
   { id: 'n12', data: { title: '二叉搜索树',     tags: ['#knowledge-point', '#algorithm-case'] } },
-  { id: 'n13', data: { title: 'AVL 树',         tags: ['#knowledge-point', '#algorithm-case'] } },
+  { id: 'n13', data: { title: 'AVL 树',         tags: ['#knowledge-point', '#algorithm-case'], content: '## AVL 树\nAVL 树是一种自平衡二叉搜索树。\n\n## 配套练习\n- [[AVL 树旋转专项]]' } },
   { id: 'n14', data: { title: '红黑树',         tags: ['#knowledge-point', '#algorithm-case'] } },
   { id: 'n15', data: { title: '冒泡排序',       tags: ['#knowledge-point'] } },
   { id: 'n16', data: { title: '快速排序',       tags: ['#knowledge-point'] } },
@@ -57,11 +59,35 @@ export const mockGraphNodes = [
   { id: 'm4',  data: { title: '快速排序算法分析.md',     tags: ['#material'] } },
   { id: 'm5',  data: { title: '堆排序图解.pdf',          tags: ['#material'] } },
   { id: 'm6',  data: { title: '红黑树旋转演示.pptx',     tags: ['#material'] } },
+  // 习题库节点：每个节点内部管理多道同类题，避免单题污染图谱
+  { id: 'ex1', data: { title: '栈基础练习',              tags: ['#exercise-bank'], content: '题型：单选题\n难度：简单\n题目数：8' } },
+  { id: 'ex2', data: { title: '链表算法训练',            tags: ['#exercise-bank'], content: '题型：算法题\n难度：中等\n题目数：12' } },
+  { id: 'ex3', data: { title: 'AVL 树旋转专项',          tags: ['#exercise-bank'], content: '题型：代码题\n难度：困难\n题目数：6' } },
 ]
+
+const extractMarkdownLinkEdges = () => {
+  const titleToId = new Map(mockGraphNodes.map((node) => [node.data.title, node.id]))
+  const edges: { source: string; target: string; data: { relation: string } }[] = []
+
+  mockGraphNodes.forEach((node) => {
+    const content = node.data.content
+    if (!content) return
+
+    for (const match of content.matchAll(/\[\[([^\]]+)\]\]/g)) {
+      const targetTitle = match[1].trim()
+      const targetId = titleToId.get(targetTitle)
+      if (targetId && targetId !== node.id) {
+        edges.push({ source: node.id, target: targetId, data: { relation: 'MD_LINK' } })
+      }
+    }
+  })
+
+  return edges
+}
 
 // 模拟边数据
 // source → target，label 为关系类型，data 存附加信息
-export const mockGraphEdges = [
+const baseGraphEdges = [
   // CONTAINS 关系（学科→章→知识点）
   { source: 'n1', target: 'n2',  data: { relation: 'CONTAINS' } },
   { source: 'n1', target: 'n3',  data: { relation: 'CONTAINS' } },
@@ -87,6 +113,11 @@ export const mockGraphEdges = [
   { source: 'n1', target: 'm4', data: { relation: 'CONTAINS' } },
   { source: 'n1', target: 'm5', data: { relation: 'CONTAINS' } },
   { source: 'n1', target: 'm6', data: { relation: 'CONTAINS' } },
+
+  // 习题库节点作为学科根目录的直接子项（与资料同级）
+  { source: 'n1', target: 'ex1', data: { relation: 'CONTAINS' } },
+  { source: 'n1', target: 'ex2', data: { relation: 'CONTAINS' } },
+  { source: 'n1', target: 'ex3', data: { relation: 'CONTAINS' } },
 
   // 代码实现/实验/易错点挂载到对应知识点（树状图层级）
   { source: 'n9',  target: 'n18', data: { relation: 'CONTAINS' } },
@@ -132,6 +163,8 @@ export const mockGraphEdges = [
   { source: 'n22', target: 'n11', data: { relation: 'CODE_IMPL' } },
 ]
 
+export const mockGraphEdges = [...baseGraphEdges, ...extractMarkdownLinkEdges()]
+
 // 关系类型 → 连线颜色映射
 export const relationColors: Record<string, string> = {
   CONTAINS:        '#CECECE',
@@ -140,6 +173,7 @@ export const relationColors: Record<string, string> = {
   CONFUSE_WITH:    '#CF222E',
   OPTIMIZE_FROM:   '#956BF5',
   HAS_ERROR:       '#CF222E',
+  MD_LINK:         '#539BF5',
 }
 
 // 关系类型 → 线型（实线 / 虚线）
@@ -150,6 +184,7 @@ export const relationLineStyle: Record<string, 'solid' | 'dashed' | 'dotted'> = 
   CONFUSE_WITH:    'dotted',
   OPTIMIZE_FROM:   'dashed',
   HAS_ERROR:       'dotted',
+  MD_LINK:         'dashed',
 }
 
 // 获取节点的 tag 颜色（用于节点背景色）
