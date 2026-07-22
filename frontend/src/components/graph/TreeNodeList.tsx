@@ -12,7 +12,7 @@ import {
 } from '@ant-design/icons'
 import { useGraphStore } from '../../stores/graphStore'
 import { useWorkspaceStore } from '../../stores/workspaceStore'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useLocation } from 'react-router-dom'
 
 const tagIconMap: Record<string, { icon: React.ReactNode; label: string }> = {
   '#subject':             { icon: <FolderOpenOutlined style={{ color: '#956BF5' }} />,      label: '学科' },
@@ -90,6 +90,8 @@ const TreeNodeList: React.FC<{ readOnly?: boolean }> = ({ readOnly = false }) =>
   const openTab = useWorkspaceStore((s) => s.openTab)
   const navigate = useNavigate()
   const { courseId = 'course-1' } = useParams()
+  const location = useLocation()
+  const role = location.pathname.startsWith('/student/') ? 'student' : 'teacher'
   const [searchText, setSearchText] = useState('')
   const [expandedKeys, setExpandedKeys] = useState<string[]>(['root'])
   const [deleteModal, setDeleteModal] = useState<{ nodeKey: string; title: string } | null>(null)
@@ -130,7 +132,7 @@ const TreeNodeList: React.FC<{ readOnly?: boolean }> = ({ readOnly = false }) =>
         items: [
           { key: `create-folder-${nodeKey}`, label: '新建子文件夹', icon: <FolderAddOutlined /> },
           { key: `create-note-${nodeKey}`, label: '新建节点', icon: <FileTextOutlined /> },
-          { key: `create-exercise-${nodeKey}`, label: '新建习题', icon: <FormOutlined /> },
+          { key: `create-exercise-${nodeKey}`, label: '新建习题库', icon: <FormOutlined /> },
           { type: 'divider' as const },
           { key: `rename-${nodeKey}`, label: '重命名', icon: <EditOutlined /> },
           { key: `import-${nodeKey}`, label: '导入', icon: <ImportOutlined /> },
@@ -179,7 +181,7 @@ const TreeNodeList: React.FC<{ readOnly?: boolean }> = ({ readOnly = false }) =>
           if (!isFolder(nodeKey) && nodeKey !== 'root') {
             const tags = node.data?.data?.tags || []
             if (tags.includes('#exercise-bank')) {
-              navigate(`/teacher/courses/${courseId}/exercises/${nodeKey}`)
+              navigate(`/${role}/courses/${courseId}/exercises/${nodeKey}`)
             } else {
               openTab({ key: nodeKey, label: nodeTitle, type: 'editor', nodeId: nodeKey })
             }

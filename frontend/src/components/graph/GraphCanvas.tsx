@@ -12,7 +12,7 @@ import { Button, Popover, Switch, Slider, Collapse } from 'antd'
 import { SettingOutlined } from '@ant-design/icons'
 import { useGraphStore } from '../../stores/graphStore'
 import { useWorkspaceStore } from '../../stores/workspaceStore'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useLocation } from 'react-router-dom'
 
 interface GraphCanvasProps {
   selectedNodeId?: string | null
@@ -46,6 +46,8 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
   }, [graphNodes, graphEdges])
   const navigate = useNavigate()
   const { courseId = 'course-1' } = useParams()
+  const location = useLocation()
+  const role = location.pathname.startsWith('/student/') ? 'student' : 'teacher'
   const effectiveSelected = selectedNodeId !== undefined ? selectedNodeId : storeSelected
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const simRef = useRef<any>(null)
@@ -340,7 +342,7 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
             if (node && !node.isTag) {
               const graphNode = graphNodes.find((n) => n.id === hit.id)
               if (graphNode?.data.tags.includes('#exercise-bank')) {
-                navigate(`/teacher/courses/${courseId}/exercises/${hit.id}`)
+                navigate(`/${role}/courses/${courseId}/exercises/${hit.id}`)
               } else {
                 openTab({ key: hit.id, label: node.title, type: 'editor', nodeId: hit.id })
               }

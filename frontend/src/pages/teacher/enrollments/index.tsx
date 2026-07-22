@@ -77,15 +77,14 @@ const EnrollmentsPage = () => {
                     <Tag>{b === 'invite_code' ? '邀请码' : b === 'teacher_approval' ? '教师审批' : '班级分配'}</Tag>
                   )},
                   { title: '加入时间', dataIndex: 'joinedAt' },
-                  { title: '操作', render: (_: any, r: any) => (
+                  { title: '操作', width: 140, render: (_: any, r: any) => (
                     <div style={{ display: 'flex', gap: 4 }}>
-                      <Button size="small"
-                        type={r.role === 'reviewer' ? 'default' : 'primary'}
+                      <Button type="link" size="small"
                         icon={<CrownOutlined />}
                         onClick={() => handleToggleReviewer(r.id, r.studentName, r.role)}>
                         {r.role === 'reviewer' ? '取消审核' : '设为审核'}
                       </Button>
-                      <Button size="small" danger icon={<DeleteOutlined />}
+                      <Button type="link" size="small" danger icon={<DeleteOutlined />}
                         onClick={() => handleRemoveMember(r.id, r.studentName)}>移除</Button>
                     </div>
                   )},
@@ -116,8 +115,8 @@ const EnrollmentsPage = () => {
                     { title: '状态', dataIndex: 'status', width: 80, render: (s: string) => <Tag color={s === 'approved' ? 'green' : s === 'rejected' ? 'red' : 'gold'}>{s === 'approved' ? '已通过' : s === 'rejected' ? '已拒绝' : '待处理'}</Tag> },
                     { title: '操作', width: 140, render: (_: any, r: any) => r.status === 'pending' ? (
                       <div style={{ display: 'flex', gap: 4 }}>
-                        <Button size="small" type="primary" icon={<CheckOutlined />} onClick={() => handleApprove(r.id)}>通过</Button>
-                        <Button size="small" danger icon={<CloseOutlined />} onClick={() => handleReject(r.id)}>拒绝</Button>
+                        <Button type="link" size="small" icon={<CheckOutlined />} onClick={() => handleApprove(r.id)}>通过</Button>
+                        <Button type="link" size="small" danger icon={<CloseOutlined />} onClick={() => handleReject(r.id)}>拒绝</Button>
                       </div>
                     ) : null },
                   ]}
@@ -144,7 +143,7 @@ const EnrollmentsPage = () => {
                     { title: '已用/上限', render: (_: any, r: any) => <span>{r.usedCount} / {r.maxUses ?? '∞'}</span> },
                     { title: '过期', dataIndex: 'expiresAt', render: (d: string | null) => d || '永久有效' },
                     { title: '状态', dataIndex: 'isActive', render: (a: boolean) => <Tag color={a ? 'green' : 'default'}>{a ? '有效' : '已停用'}</Tag> },
-                    { title: '操作', render: (_: any, r: any) => r.isActive ? <Button size="small" icon={<StopOutlined />} onClick={() => handleDeactivateCode(r.id)}>停用</Button> : null },
+                    { title: '操作', width: 80, render: (_: any, r: any) => r.isActive ? <Button type="link" size="small" icon={<StopOutlined />} onClick={() => handleDeactivateCode(r.id)}>停用</Button> : null },
                   ]}
                 />
               </div>

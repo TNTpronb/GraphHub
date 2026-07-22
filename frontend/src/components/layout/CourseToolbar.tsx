@@ -1,6 +1,6 @@
 // 课程工具栏 — Obsidian 风格左侧窄图标栏（仅课程页显示）
 
-import React from 'react'
+import React, { useMemo } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Tooltip } from 'antd'
 import {
@@ -18,9 +18,9 @@ interface ToolbarButton {
 
 const teacherButtons: ToolbarButton[] = [
   { key: 'graph',    icon: <ApartmentOutlined />, label: '图谱',    path: 'graph' },
-  { key: 'history',  icon: <HistoryOutlined />,    label: '历史',    path: 'graph/versions' },
   { key: 'materials',icon: <FolderOpenOutlined />, label: '资料',    path: 'materials' },
   { key: 'exercises',icon: <FormOutlined />,       label: '习题库',  path: 'exercises' },
+  { key: 'history',  icon: <HistoryOutlined />,    label: '历史',    path: 'graph/versions' },
   { key: 'review',   icon: <AuditOutlined />,    label: '审核',    path: 'review' },
   { key: 'members',  icon: <TeamOutlined />,     label: '成员',    path: 'enrollments' },
   { key: 'issues',   icon: <BugOutlined />,      label: 'Issue',   path: 'issues' },
@@ -29,8 +29,9 @@ const teacherButtons: ToolbarButton[] = [
 
 const studentButtons: ToolbarButton[] = [
   { key: 'graph',         icon: <ApartmentOutlined />,  label: '图谱',      path: 'graph' },
-  { key: 'history',       icon: <HistoryOutlined />,    label: '历史',      path: 'graph/versions' },
   { key: 'materials',     icon: <FolderOpenOutlined />, label: '资料',      path: 'materials' },
+  { key: 'exercises',     icon: <FormOutlined />,       label: '习题库',    path: 'exercises' },
+  { key: 'history',       icon: <HistoryOutlined />,    label: '历史',      path: 'graph/versions' },
   { key: 'my-graphs',     icon: <ForkOutlined />,       label: '我的图谱',  path: 'my-graphs' },
   { key: 'my-pr',         icon: <AuditOutlined />,      label: '我的提交',   path: 'my-pr' },
   { key: 'issues',        icon: <BugOutlined />,        label: 'Issue',     path: 'issues' },
@@ -49,9 +50,18 @@ const CourseToolbar: React.FC<CourseToolbarProps> = ({ role, courseId }) => {
 
   const buttons = role === 'teacher' ? teacherButtons : studentButtons
 
-  const activeKey = buttons.find((b) =>
-    location.pathname.split('/').slice(-b.path.split('/').length).join('/') === b.path
-  )?.key || 'graph'
+  const activeKey = useMemo(() => {
+    const subPath = courseId ? location.pathname.split(`/courses/${courseId}/`)[1] || 'graph' : 'graph'
+    let bestMatch: string | undefined
+    let bestLen = -1
+    buttons.forEach((b) => {
+      if ((subPath === b.path || subPath.startsWith(b.path + '/')) && b.path.length > bestLen) {
+        bestLen = b.path.length
+        bestMatch = b.key
+      }
+    })
+    return bestMatch || 'graph'
+  }, [buttons, courseId, location.pathname])
 
   return (
     <div style={{

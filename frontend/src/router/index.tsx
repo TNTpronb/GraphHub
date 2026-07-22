@@ -35,6 +35,8 @@ import StudentContributions from '../pages/student/contributions'
 import StudentDiff         from '../pages/student/diff'
 import StudentMyGraphs     from '../pages/student/my-graphs'
 import StudentGraphEditor  from '../pages/student/my-graphs-editor'
+import StudentExercises    from '../pages/student/exercises'
+import StudentExercisesDetail from '../pages/student/exercises/detail'
 
 const router = createBrowserRouter([
   // ── 登录/注册/忘记密码（独立路由，无布局壳） ──
@@ -92,7 +94,8 @@ const router = createBrowserRouter([
       { path: 'courses/:courseId/contributions', element: <StudentContributions /> },
       { path: 'courses/:courseId/info', element: <StudentInfo /> },
       { path: 'courses/:courseId/diff/:prId', element: <StudentDiff /> },
-      { path: 'courses/:courseId/exercises', element: <StudentDashboard /> },
+      { path: 'courses/:courseId/exercises/:bankId', element: <StudentExercisesDetail /> },
+      { path: 'courses/:courseId/exercises', element: <StudentExercises /> },
       { path: 'private-graph/:graphId', element: <StudentPrivateGraph /> },
       { path: 'pr/:prId', element: <StudentPR /> },
     ],
