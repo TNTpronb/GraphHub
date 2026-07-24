@@ -1,7 +1,7 @@
 // 教师端习题库管理页
 
 import { useState, useMemo } from 'react'
-import { Button, Form, Input, Modal, Space, Table, Tag } from 'antd'
+import { Button, Form, Input, Modal, Select, Space, Switch, Table, Tag } from 'antd'
 import type { TableProps } from 'antd'
 import { ImportOutlined, PlusOutlined } from '@ant-design/icons'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -22,6 +22,8 @@ interface ExerciseBank {
   mountedNodeName: string
   questionCount: number
   status: string
+  retryLimit: number
+  aiGradingEnabled: boolean
   questions: ExerciseQuestion[]
 }
 
@@ -36,6 +38,8 @@ const mockExerciseBanks: ExerciseBank[] = [
     mountedNodeName: '栈',
     questionCount: 8,
     status: '已发布',
+    retryLimit: 0,
+    aiGradingEnabled: true,
     questions: [
       { id: 'q1', stem: '栈的入栈和出栈操作遵循什么原则？' },
       { id: 'q2', stem: '以下哪个场景适合使用栈？' },
@@ -51,6 +55,8 @@ const mockExerciseBanks: ExerciseBank[] = [
     mountedNodeName: '链表',
     questionCount: 12,
     status: '已发布',
+    retryLimit: 1,
+    aiGradingEnabled: false,
     questions: [
       { id: 'q3', stem: '实现单链表反转函数。' },
       { id: 'q4', stem: '判断链表是否存在环。' },
@@ -66,6 +72,8 @@ const mockExerciseBanks: ExerciseBank[] = [
     mountedNodeName: 'AVL 树',
     questionCount: 6,
     status: '待审核',
+    retryLimit: 0,
+    aiGradingEnabled: false,
     questions: [
       { id: 'q5', stem: '实现 AVL 树的左旋操作。' },
       { id: 'q6', stem: '实现 AVL 树的右旋操作。' },
@@ -104,15 +112,17 @@ const TeacherExercisesPage = () => {
           mountedNodeName: '-',
           questionCount: 0,
           status: '草稿',
+          retryLimit: 0,
+          aiGradingEnabled: false,
           questions: [],
         }
       })
   }, [graphNodes])
 
   const handleCreate = () => {
-    const values = form.getFieldsValue(['title', 'description']) as { title?: string; description?: string }
+    const values = form.getFieldsValue(['title', 'description', 'retryLimit', 'aiGradingEnabled']) as { title?: string; description?: string; retryLimit?: number; aiGradingEnabled?: boolean }
     if (!values.title?.trim()) return
-    addExerciseBank(values.title.trim(), values.description || '')
+    addExerciseBank(values.title.trim(), values.description || '', values.retryLimit ?? 0, values.aiGradingEnabled ?? true)
     form.resetFields()
     setModalOpen(false)
   }
@@ -168,6 +178,20 @@ const TeacherExercisesPage = () => {
       width: 90,
       render: (status: string) => <Tag color={status === '已发布' ? 'green' : 'gold'}>{status}</Tag>,
     },
+    {
+      title: '重做次数',
+      dataIndex: 'retryLimit',
+      key: 'retryLimit',
+      width: 100,
+      render: (v: number) => v === 0 ? '不限' : `${v} 次`,
+    },
+    {
+      title: 'AI 判题',
+      dataIndex: 'aiGradingEnabled',
+      key: 'aiGradingEnabled',
+      width: 100,
+      render: (v: boolean) => v ? '启用' : '关闭',
+    },
   ]
 
   return (
@@ -206,12 +230,25 @@ const TeacherExercisesPage = () => {
           <Button key="save" type="primary" onClick={handleCreate}>创建</Button>,
         ]}
       >
-        <Form form={form} layout="vertical">
+        <Form form={form} layout="vertical" initialValues={{ retryLimit: 0, aiGradingEnabled: true }}>
           <Form.Item name="title" label="习题库名称">
             <Input placeholder="例如：栈基础练习" />
           </Form.Item>
           <Form.Item name="description" label="习题库说明">
             <Input.TextArea rows={3} />
+          </Form.Item>
+          <Form.Item name="retryLimit" label="重新作答次数">
+            <Select options={[
+              { value: 0, label: '不限' },
+              { value: 1, label: '1 次' },
+              { value: 2, label: '2 次' },
+              { value: 3, label: '3 次' },
+              { value: 5, label: '5 次' },
+              { value: 10, label: '10 次' },
+            ]} />
+          </Form.Item>
+          <Form.Item name="aiGradingEnabled" label="启用 AI 判题" valuePropName="checked" tooltip="针对主观题，启用后系统自动判分">
+            <Switch />
           </Form.Item>
         </Form>
       </Modal>

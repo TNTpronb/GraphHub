@@ -19,7 +19,7 @@ interface GraphStore {
   setSelectedNodeId: (id: string | null) => void
   graphNodes: GraphNode[]
   graphEdges: GraphEdge[]
-  addExerciseBank: (title: string, description: string) => void
+  addExerciseBank: (title: string, description: string, retryLimit?: number, aiGradingEnabled?: boolean) => void
 }
 
 export const useGraphStore = create<GraphStore>((set, get) => ({
@@ -27,11 +27,11 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
   setSelectedNodeId: (id) => set({ selectedNodeId: id }),
   graphNodes: [...mockGraphNodes],
   graphEdges: [...mockGraphEdges],
-  addExerciseBank: (title, description) => {
+  addExerciseBank: (title, description, retryLimit = 0, aiGradingEnabled = true) => {
     const id = `ex${Date.now()}`
     const newNode = {
       id,
-      data: { title, tags: ['#exercise-bank'], content: description },
+      data: { title, tags: ['#exercise-bank'], content: description, retryLimit, aiGradingEnabled },
     }
     const newEdge = {
       source: 'n1',

@@ -5,6 +5,7 @@ import { Button, Checkbox, Divider, Form, Input, Modal, Progress, Radio, Select,
 import type { TableProps, UploadProps } from 'antd'
 import {
   ArrowLeftOutlined,
+  AuditOutlined,
   DeleteOutlined,
   EditOutlined,
   InboxOutlined,
@@ -35,6 +36,8 @@ interface ExerciseBank {
   mountedNodeName: string
   questionCount: number
   status: string
+  retryLimit: number
+  aiGradingEnabled: boolean
   questions: ExerciseQuestion[]
 }
 
@@ -48,6 +51,8 @@ const mockExerciseBanks: ExerciseBank[] = [
     mountedNodeName: '栈',
     questionCount: 8,
     status: '已发布',
+    retryLimit: 0,
+    aiGradingEnabled: true,
     questions: [
       { id: 'q1', stem: '栈的入栈和出栈操作遵循什么原则？', type: '单选题', difficulty: '简单', options: ['A. 先进先出', 'B. 后进先出', 'C. 先进后出', 'D. 随机存取'], answer: 'B. 后进先出' },
       { id: 'q2', stem: '以下哪个场景适合使用栈？', type: '单选题', difficulty: '简单', options: ['A. 排队叫号', 'B. 括号匹配', 'C. 好友推荐', 'D. 最短路径'], answer: 'B. 括号匹配' },
@@ -68,6 +73,8 @@ const mockExerciseBanks: ExerciseBank[] = [
     mountedNodeName: '链表',
     questionCount: 12,
     status: '已发布',
+    retryLimit: 1,
+    aiGradingEnabled: false,
     questions: [
       { id: 'q9', stem: '实现单链表反转函数。', type: '算法题', difficulty: '简单', options: [], answer: '' },
       { id: 'q10', stem: '判断链表是否存在环。', type: '算法题', difficulty: '中等', options: [], answer: '' },
@@ -92,6 +99,8 @@ const mockExerciseBanks: ExerciseBank[] = [
     mountedNodeName: 'AVL 树',
     questionCount: 6,
     status: '待审核',
+    retryLimit: 0,
+    aiGradingEnabled: false,
     questions: [
       { id: 'q21', stem: '实现 AVL 树的左旋操作。', type: '代码题', difficulty: '中等', options: [], answer: '' },
       { id: 'q22', stem: '实现 AVL 树的右旋操作。', type: '代码题', difficulty: '中等', options: [], answer: '' },
@@ -274,6 +283,8 @@ const ExerciseBankDetailPage = () => {
       mountedNodeName: '-',
       questionCount: 0,
       status: '草稿',
+      retryLimit: 0,
+      aiGradingEnabled: false,
       questions: [],
     } as ExerciseBank
   }, [bankId, graphNodes])
@@ -641,6 +652,7 @@ const ExerciseBankDetailPage = () => {
           </Space>
         </div>
         <Space>
+          <Button icon={<AuditOutlined />} onClick={() => navigate(`/teacher/courses/${courseId}/exercises/${bankId}/review`)}>做题情况</Button>
           <Button icon={<RobotOutlined />} onClick={openAiInput}>AI录入</Button>
           <Button icon={<ThunderboltOutlined />} onClick={openAiGen}>AI生题</Button>
           <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>添加题目</Button>
