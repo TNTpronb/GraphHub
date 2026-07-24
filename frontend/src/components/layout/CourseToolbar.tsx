@@ -23,6 +23,7 @@ const teacherButtons: ToolbarButton[] = [
   { key: 'history',  icon: <HistoryOutlined />,    label: '历史',    path: 'graph/versions' },
   { key: 'review',   icon: <AuditOutlined />,    label: '审核',    path: 'review' },
   { key: 'members',  icon: <TeamOutlined />,     label: '成员',    path: 'enrollments' },
+  { key: 'contributions', icon: <TrophyOutlined />, label: '班级贡献', path: 'contributions' },
   { key: 'issues',   icon: <BugOutlined />,      label: 'Issue',   path: 'issues' },
   { key: 'info',     icon: <InfoCircleOutlined />, label: '信息',   path: 'info' },
 ]
