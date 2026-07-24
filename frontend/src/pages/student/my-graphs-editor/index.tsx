@@ -1,20 +1,27 @@
 // 私人图谱编辑页 — 工作区标签页 + Pull 同步 + 冲突处理
 
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { Tabs, Button, Space, message, Modal, Tag, Input, Progress } from 'antd'
 import { SearchOutlined, ExportOutlined, SendOutlined, ArrowLeftOutlined, SyncOutlined, ExclamationCircleOutlined, SaveOutlined, CheckCircleOutlined, WarningOutlined, CloseCircleOutlined } from '@ant-design/icons'
 import GraphCanvas from '../../../components/graph/GraphCanvas'
 import NoteDetailPanel from '../../../components/graph/NoteDetailPanel'
 import ConflictPanel from '../../../components/pr/ConflictPanel'
 import { useWorkspaceStore } from '../../../stores/workspaceStore'
+import { useGraphStore } from '../../../stores/graphStore'
 import type { WorkspaceTab } from '../../../stores/workspaceStore'
 
 const PrivateGraphEditor = () => {
   const { courseId, versionKey } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
+  const isTeacher = location.pathname.includes('/teacher/')
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const { tabs, activeKey, closeTab, setActiveKey } = useWorkspaceStore()
+
+  // ── 提交到班级图谱（老师专用） ──
+  const [classGraphModal, setClassGraphModal] = useState(false)
+  const [classGraphMessage, setClassGraphMessage] = useState('')
 
   // ── Git commit 风格保存 ──
   const [saveModal, setSaveModal] = useState(false)
@@ -81,6 +88,15 @@ const PrivateGraphEditor = () => {
     message.success('已保存更改')
   }
 
+  const submitToClassGraph = useGraphStore((s) => s.submitToClassGraph)
+  const handleSubmitToClassGraph = () => {
+    if (!classGraphMessage.trim()) return
+    submitToClassGraph(classGraphMessage, 'teacher-1', '张老师')
+    setClassGraphModal(false)
+    setClassGraphMessage('')
+    message.success('已提交到班级图谱')
+  }
+
   useEffect(() => {
     useWorkspaceStore.setState({ tabs: [{ key: 'graph', label: '图谱', type: 'graph' }], activeKey: 'graph' })
   }, [])
@@ -127,8 +143,15 @@ const PrivateGraphEditor = () => {
                     <Button size="small" icon={<SyncOutlined />} onClick={handlePull}>Pull</Button>
                     <Button size="small" type="primary" icon={<SaveOutlined />}
                       onClick={() => { setCommitMessage(''); setSaveModal(true) }}>保存</Button>
-                    <Button size="small" type="primary" icon={<SendOutlined />}
-                      onClick={handleSubmitPR} disabled={!saved}>提交 PR</Button>
+                    {isTeacher && (
+                      <Button size="small" type="primary" icon={<SendOutlined />}
+                        onClick={() => { setClassGraphMessage(''); setClassGraphModal(true) }}
+                        disabled={!saved}>提交到班级图谱</Button>
+                    )}
+                    {!isTeacher && (
+                      <Button size="small" type="primary" icon={<SendOutlined />}
+                        onClick={handleSubmitPR} disabled={!saved}>提交 PR</Button>
+                    )}
                   </Space>
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -188,6 +211,24 @@ const PrivateGraphEditor = () => {
           autoFocus
         />
       </Modal>
+      {/* ── 提交到班级图谱弹窗（老师专用） ── */}
+      {isTeacher && (
+        <Modal title="提交到班级图谱" open={classGraphModal}
+          onCancel={() => setClassGraphModal(false)} onOk={handleSubmitToClassGraph}
+          okText="确认提交" cancelText="取消"
+          okButtonProps={{ disabled: !classGraphMessage.trim() }}>
+          <p style={{ fontSize: 13, color: '#6B6B6B', marginBottom: 12 }}>
+            你的修改将直接合并到班级图谱，请填写本次提交说明。
+          </p>
+          <Input.TextArea
+            placeholder="例如：补充红黑树节点、修改时间复杂度描述"
+            value={classGraphMessage}
+            onChange={(e) => setClassGraphMessage(e.target.value)}
+            rows={3}
+            autoFocus
+          />
+        </Modal>
+      )}
       <Modal title="Pull · 同步班级图谱更新" open={pullModalOpen}
         onCancel={() => setPullModalOpen(false)}
         onOk={handlePullComplete} okText="完成同步" width={720}

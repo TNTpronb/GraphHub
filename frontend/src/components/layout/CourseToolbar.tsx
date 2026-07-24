@@ -17,14 +17,15 @@ interface ToolbarButton {
 }
 
 const teacherButtons: ToolbarButton[] = [
-  { key: 'graph',    icon: <ApartmentOutlined />, label: '图谱',    path: 'graph' },
-  { key: 'materials',icon: <FolderOpenOutlined />, label: '资料',    path: 'materials' },
-  { key: 'exercises',icon: <FormOutlined />,       label: '习题库',  path: 'exercises' },
-  { key: 'history',  icon: <HistoryOutlined />,    label: '历史',    path: 'graph/versions' },
-  { key: 'review',   icon: <AuditOutlined />,    label: '审核',    path: 'review' },
-  { key: 'members',  icon: <TeamOutlined />,     label: '成员',    path: 'enrollments' },
-  { key: 'issues',   icon: <BugOutlined />,      label: 'Issue',   path: 'issues' },
-  { key: 'info',     icon: <InfoCircleOutlined />, label: '信息',   path: 'info' },
+  { key: 'graph',      icon: <ApartmentOutlined />, label: '图谱',    path: 'graph' },
+  { key: 'materials',  icon: <FolderOpenOutlined />, label: '资料',    path: 'materials' },
+  { key: 'exercises',  icon: <FormOutlined />,       label: '习题库',  path: 'exercises' },
+  { key: 'history',    icon: <HistoryOutlined />,    label: '历史',    path: 'graph/versions' },
+  { key: 'issues',     icon: <BugOutlined />,        label: 'Issue',   path: 'issues' },
+  { key: 'my-graphs',  icon: <ForkOutlined />,       label: '我的图谱', path: 'my-graphs' },
+  { key: 'review',     icon: <AuditOutlined />,      label: '审核',    path: 'review' },
+  { key: 'members',    icon: <TeamOutlined />,       label: '成员',    path: 'enrollments' },
+  { key: 'info',       icon: <InfoCircleOutlined />, label: '信息',    path: 'info' },
 ]
 
 const studentButtons: ToolbarButton[] = [
@@ -32,9 +33,9 @@ const studentButtons: ToolbarButton[] = [
   { key: 'materials',     icon: <FolderOpenOutlined />, label: '资料',      path: 'materials' },
   { key: 'exercises',     icon: <FormOutlined />,       label: '习题库',    path: 'exercises' },
   { key: 'history',       icon: <HistoryOutlined />,    label: '历史',      path: 'graph/versions' },
+  { key: 'issues',        icon: <BugOutlined />,        label: 'Issue',     path: 'issues' },
   { key: 'my-graphs',     icon: <ForkOutlined />,       label: '我的图谱',  path: 'my-graphs' },
   { key: 'my-pr',         icon: <AuditOutlined />,      label: '我的提交',   path: 'my-pr' },
-  { key: 'issues',        icon: <BugOutlined />,        label: 'Issue',     path: 'issues' },
   { key: 'contributions', icon: <TrophyOutlined />,     label: '我的贡献',   path: 'contributions' },
   { key: 'info',          icon: <InfoCircleOutlined />,  label: '信息',      path: 'info' },
 ]

@@ -64,6 +64,8 @@ const router = createBrowserRouter([
       { path: 'courses/new', element: <TeacherCreateCourse /> },
       { path: 'courses/:courseId/graph', element: <TeacherGraph /> },
       { path: 'courses/:courseId/graph/versions', element: <TeacherHistory /> },
+      { path: 'courses/:courseId/my-graphs/:versionKey', element: <StudentGraphEditor /> },
+      { path: 'courses/:courseId/my-graphs', element: <StudentMyGraphs /> },
       { path: 'courses/:courseId/review', element: <TeacherReview /> },
       { path: 'courses/:courseId/enrollments', element: <TeacherEnrollments /> },
       { path: 'courses/:courseId/issues', element: <TeacherIssues /> },

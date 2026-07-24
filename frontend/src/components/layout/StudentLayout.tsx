@@ -54,9 +54,10 @@ const StudentLayout = () => {
   const contentPaths = ['graph', 'graph/versions', 'materials', 'exercises', 'my-pr', 'issues', 'contributions', 'info', 'diff', 'my-graphs']
   const isContentPage = !!(urlCourseId && (
     contentPaths.includes(courseSubPath) ||
-    courseSubPath?.startsWith('exercises/')
+    courseSubPath?.startsWith('exercises/') ||
+    courseSubPath?.startsWith('my-graphs/')
   ))
-  const isGraphPage = courseSubPath === 'graph' || (courseSubPath === 'my-graphs' && !!pathParts[5])
+  const isGraphPage = courseSubPath === 'graph' || courseSubPath?.startsWith('my-graphs/')
 
   const iconBtnStyle: React.CSSProperties = {
     width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center',

@@ -2,7 +2,7 @@
 // 默认"图谱"标签页显示网络图，双击树节点在新标签页打开编辑器
 
 import { Tabs, Button, Space } from 'antd'
-import { SearchOutlined, ExportOutlined } from '@ant-design/icons'
+import { SearchOutlined, ExportOutlined, ForkOutlined } from '@ant-design/icons'
 import GraphCanvas from '../../../components/graph/GraphCanvas'
 import NoteDetailPanel from '../../../components/graph/NoteDetailPanel'
 import { useWorkspaceStore } from '../../../stores/workspaceStore'
@@ -12,6 +12,7 @@ import type { WorkspaceTab } from '../../../stores/workspaceStore'
 const TeacherGraphPage = () => {
   const selectedNodeId = useGraphStore((s) => s.selectedNodeId)
   const { tabs, activeKey, closeTab, setActiveKey } = useWorkspaceStore()
+  const forkGraph = useGraphStore((s) => s.forkGraph)
 
   const handleEdit = (key: React.MouseEvent | React.KeyboardEvent | string, action: 'add' | 'remove') => {
     if (action === 'remove') {
@@ -30,6 +31,7 @@ const TeacherGraphPage = () => {
                 <Space>
                   <Button icon={<SearchOutlined />} size="small">搜索节点</Button>
                   <Button icon={<ExportOutlined />} size="small">导出</Button>
+                  <Button icon={<ForkOutlined />} size="small" onClick={() => forkGraph()}>复制到我的图谱</Button>
                   <Button type="primary" size="small">新增节点</Button>
                 </Space>
               </div>

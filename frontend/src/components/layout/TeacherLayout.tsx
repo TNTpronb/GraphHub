@@ -45,7 +45,7 @@ const TeacherLayout = () => {
 
   const onMenuClick: MenuProps['onClick'] = ({ key }) => {
     setDrawerOpen(false)
-    if (urlCourseId && ['graph', 'graph/versions', 'materials', 'exercises', 'analytics', 'enrollments', 'review', 'issues', 'info'].includes(key)) {
+    if (urlCourseId && ['graph', 'my-graphs', 'graph/versions', 'materials', 'exercises', 'analytics', 'enrollments', 'review', 'issues', 'info'].includes(key)) {
       navigate(`/teacher/courses/${urlCourseId}/${key}`)
       return
     }
@@ -72,12 +72,13 @@ const TeacherLayout = () => {
 
   // URL relative sub-path after courses/courseId/
   const courseSubPath = urlCourseId ? location.pathname.split(`/courses/${urlCourseId}/`)[1] || 'graph' : undefined
-  const coursePaths = ['graph', 'graph/versions', 'materials', 'exercises', 'analytics', 'enrollments', 'review', 'issues', 'info', 'diff']
+  const coursePaths = ['graph', 'my-graphs', 'graph/versions', 'materials', 'exercises', 'analytics', 'enrollments', 'review', 'issues', 'info', 'diff']
   const isCoursePage = !!urlCourseId && (
     coursePaths.includes(courseSubPath) ||
-    courseSubPath?.startsWith('exercises/')
+    courseSubPath?.startsWith('exercises/') ||
+    courseSubPath?.startsWith('my-graphs/')
   )
-  const isGraphPage = courseSubPath === 'graph'
+  const isGraphPage = courseSubPath === 'graph' || courseSubPath?.startsWith('my-graphs/')
 
   // 每个图标按钮共享的圆角方框样式
   const iconBtnStyle: React.CSSProperties = {
