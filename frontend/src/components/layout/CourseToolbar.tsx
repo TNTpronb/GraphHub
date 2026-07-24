@@ -25,6 +25,7 @@ const teacherButtons: ToolbarButton[] = [
   { key: 'my-graphs',  icon: <ForkOutlined />,       label: '我的图谱', path: 'my-graphs' },
   { key: 'review',     icon: <AuditOutlined />,      label: '审核',    path: 'review' },
   { key: 'members',    icon: <TeamOutlined />,       label: '成员',    path: 'enrollments' },
+  { key: 'contributions', icon: <TrophyOutlined />,  label: '班级贡献', path: 'contributions' },
   { key: 'info',       icon: <InfoCircleOutlined />, label: '信息',    path: 'info' },
 ]
 

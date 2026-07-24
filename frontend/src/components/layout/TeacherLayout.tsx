@@ -45,7 +45,7 @@ const TeacherLayout = () => {
 
   const onMenuClick: MenuProps['onClick'] = ({ key }) => {
     setDrawerOpen(false)
-    if (urlCourseId && ['graph', 'my-graphs', 'graph/versions', 'materials', 'exercises', 'analytics', 'enrollments', 'review', 'issues', 'info'].includes(key)) {
+    if (urlCourseId && ['graph', 'my-graphs', 'graph/versions', 'materials', 'exercises', 'analytics', 'enrollments', 'review', 'issues', 'info', 'contributions'].includes(key)) {
       navigate(`/teacher/courses/${urlCourseId}/${key}`)
       return
     }
@@ -72,7 +72,7 @@ const TeacherLayout = () => {
 
   // URL relative sub-path after courses/courseId/
   const courseSubPath = urlCourseId ? location.pathname.split(`/courses/${urlCourseId}/`)[1] || 'graph' : undefined
-  const coursePaths = ['graph', 'my-graphs', 'graph/versions', 'materials', 'exercises', 'analytics', 'enrollments', 'review', 'issues', 'info', 'diff']
+  const coursePaths = ['graph', 'my-graphs', 'graph/versions', 'materials', 'exercises', 'analytics', 'enrollments', 'review', 'issues', 'info', 'diff', 'contributions']
   const isCoursePage = !!urlCourseId && (
     coursePaths.includes(courseSubPath) ||
     courseSubPath?.startsWith('exercises/') ||

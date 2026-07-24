@@ -13,6 +13,7 @@ import {
   SearchOutlined,
   TeamOutlined,
   ForkOutlined,
+  TrophyOutlined,
 } from '@ant-design/icons'
 import type { ItemType } from 'antd/es/menu/interface'
 
@@ -22,6 +23,7 @@ export const teacherCourseMenuItems: ItemType[] = [
   { key: 'my-graphs',   icon: React.createElement(ForkOutlined),      label: '我的图谱' },
   { key: 'materials',   icon: React.createElement(FileTextOutlined),   label: '课程资料' },
   { key: 'exercises',   icon: React.createElement(ExperimentOutlined),  label: '习题库' },
+  { key: 'contributions', icon: React.createElement(TrophyOutlined), label: '班级贡献' },
   { key: 'analytics',   icon: React.createElement(BarChartOutlined),    label: '学情分析' },
   { key: 'enrollments', icon: React.createElement(TeamOutlined),        label: '学生管理' },
 ]
